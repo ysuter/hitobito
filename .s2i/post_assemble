@@ -6,6 +6,7 @@ set -ex
 
 pushd /opt/app-root/src
 
+echo "DEMO_INSTANCE is set to: $DEMO_INSTANCE"
 # load development seeds when demo instance
 if [ $DEMO_INSTANCE -eq 1 ]; then
   echo 'demo instance: creating symlink for loading development seeds'
