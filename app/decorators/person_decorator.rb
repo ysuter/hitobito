@@ -67,10 +67,13 @@ class PersonDecorator < ApplicationDecorator
 
   # returns roles grouped by their group
   def roles_grouped
+
     roles.each_with_object(Hash.new { |h, k| h[k] = [] }) do |role, memo|
-      memo[role.group] << role
+      memo[role.group] << role if can?(:show, role)
     end
   end
+
+
 
   def latest_qualifications_uniq_by_kind
     qualifications.
