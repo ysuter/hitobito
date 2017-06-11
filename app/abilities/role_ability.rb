@@ -12,10 +12,10 @@ class RoleAbility < AbilityDsl::Base
   on(Role) do
     class_side(:role_types, :details).all
 
-    permissions(:group_read).may(:show).in_same_group
-    permissions(:group_and_below_read).may(:show).in_same_group_or_below
-    permissions(:layer_read).may(:show).in_same_layer
-    permissions(:layer_and_below_read).may(:show).in_same_layer_or_visible_below
+    permission(:group_read).may(:show).in_same_group
+    permission(:group_and_below_read).may(:show).in_same_group_or_below
+    permission(:layer_read).may(:show).in_same_layer
+    permission(:layer_and_below_read).may(:show).in_same_layer_or_visible_below
 
     permission(:group_full).may(:show, :create, :update, :destroy).in_same_group
 
