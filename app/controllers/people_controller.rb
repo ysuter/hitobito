@@ -42,8 +42,8 @@ class PeopleController < CrudController
     respond_to do |format|
       format.html  { @people = prepare_entries(filter_entries).page(params[:page]) }
       format.pdf   { render_pdf(filter_entries) }
-      format.csv   { render_tabular_entries_in_background(:csv)  && redirect_to(action: :index) }
-      format.xlsx  { render_tabular_entries_in_background(:xlsx) && redirect_to(action: :index) }
+      format.csv   { render_tabular_entries(:csv) }
+      format.xlsx  { render_tabular_entries(:xlsx) }
       format.vcf   { render_vcf(filter_entries.includes(:phone_numbers)) }
       format.email { render_emails(filter_entries) }
       format.json  { render_entries_json(filter_entries) }
@@ -171,10 +171,19 @@ class PeopleController < CrudController
     end
   end
 
-  def render_tabular_entries_in_background(format)
+  def render_tabular_entries(format)
+    full = params[:details].present? && index_full_ability?
+    Timeout.timeout(5) do # creates background job if export takes to long
+      render_tabular(format, prepare_tabular_entries(filter_entries, full), full)
+    end
+  rescue Timeout::Error
+    render_tabular_entries_in_background(format, full)
+    redirect_to action: :index
+  end
+
+  def render_tabular_entries_in_background(format, full)
     email = current_person.email
     if email
-      full = params[:details].present? && index_full_ability?
       render_tabular_in_background(format, full)
       flash[:notice] = translate(:export_enqueued, email: email)
     else

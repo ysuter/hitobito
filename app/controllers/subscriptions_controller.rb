@@ -4,7 +4,6 @@
 #  hitobito and licensed under the Affero General Public License version 3
 #  or later. See the COPYING file at the top-level directory or at
 #  https://github.com/hitobito/hitobito.
-
 class SubscriptionsController < CrudController
 
   include Concerns::RenderPeopleExports
@@ -24,8 +23,8 @@ class SubscriptionsController < CrudController
         load_grouped_subscriptions
       end
       format.pdf   { render_pdf(ordered_people) }
-      format.csv   { render_tabular_in_background(:csv)  && redirect_to(action: :index) }
-      format.xlsx  { render_tabular_in_background(:xlsx) && redirect_to(action: :index) }
+      format.csv   { render_export(:csv) }
+      format.xlsx  { render_export(:xlsx) }
       format.vcf   { render_vcf(ordered_people) }
       format.email { render_emails(ordered_people) }
     end
@@ -44,14 +43,34 @@ class SubscriptionsController < CrudController
     mailing_list.people.order_by_name
   end
 
-  def render_tabular_in_background(format)
-    Export::SubscriptionsJob.new(format, mailing_list.id, current_person.id).enqueue!
+  def render_export(format)
+    thread = export(format)
+    sleep(1) while thread.alive?
+    return send_data @data if @data
     flash[:notice] = translate(:export_enqueued, email: current_person.email)
+    redirect_to action: :index
   end
 
-  def render_tabular(format, people)
-    data = Export::Tabular::People::PeopleAddress.export(format, prepare_tabular_entries(people))
-    send_data data, type: format
+  def export(format)
+    Thread.new do
+      begin
+        Timeout.timeout(5) do
+          @data = render_tabular(format)
+        end
+      rescue Timeout::Error
+        render_tabular_in_background(format)
+        Thread.current.kill
+      end
+    end
+  end
+
+  def render_tabular(format)
+    entries = prepare_tabular_entries(ordered_people)
+    Export::Tabular::People::PeopleAddress.export(format, entries)
+  end
+
+  def render_tabular_in_background(format)
+    Export::SubscriptionsJob.new(format, mailing_list.id, current_person.id).enqueue!
   end
 
   def prepare_tabular_entries(people)

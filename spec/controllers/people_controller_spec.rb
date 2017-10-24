@@ -135,7 +135,46 @@ describe PeopleController do
           end
         end
 
-        context 'background job' do
+        context '.csv' do
+          it 'exports address csv files' do
+            get :index, group_id: group, format: :csv
+
+            expect(@response.content_type).to eq('text/csv')
+            expect(@response.body).to match(/^Vorname;Nachname;.*Privat;.*Office/)
+            expect(@response.body).to match(/^Top;Leader;.*/)
+            expect(@response.body).to match(/123;789/)
+            expect(@response.body).not_to match(/skypefoo/)
+            expect(@response.body).not_to match(/Zusätzliche Angaben/)
+            expect(@response.body).not_to match(/Mobile/)
+            expect(@response.body).not_to match(/;456;/)
+          end
+
+          it 'exports full csv files' do
+            get :index, group_id: group, details: true, format: :csv
+
+            expect(@response.content_type).to eq('text/csv')
+            expect(@response.body).to match(/^Vorname;Nachname;.*;Zusätzliche Angaben;.*Privat;.*Mobile;.*Office;.*Facebook;.*Skype/)
+            expect(@response.body).to match(/^Top;Leader;.*;bla bla/)
+            expect(@response.body).to match(/123;456;789;.*facefoo;skypefoo/)
+          end
+
+          it 'exports full csv when types given and ability exists' do
+            get :index, group_id: group,
+                        filters: { role: { role_type_ids: [Group::BottomGroup::Member.id, Role::External.id].join('-') } },
+                        range: 'layer',
+                        details: true,
+                        format: :csv
+
+            expect(@response.content_type).to eq('text/csv')
+            expect(@response.body).to match(/^Vorname;Nachname;.*Zusätzliche Angaben/)
+          end
+        end
+
+        context 'runs background job if normal export takes to long' do
+          before do
+            expect_any_instance_of(PeopleController).to receive(:render_tabular).and_raise(Timeout::Error)
+          end
+
           it 'exports csv' do
             expect do
               get :index, group_id: group, format: :csv
@@ -260,6 +299,17 @@ describe PeopleController do
             expect(assigns(:person_add_requests)).to be_nil
           end
 
+          it 'exports full csv when types given and ability exists' do
+            get :index, group_id: group,
+                        filters: { role: { role_type_ids: [Group::BottomGroup::Member.id, Role::External.id].join('-') } },
+                        range: 'layer',
+                        details: true,
+                        format: :csv
+
+            expect(@response.content_type).to eq('text/csv')
+            expect(@response.body).to match(/^Vorname;Nachname;.*Zusätzliche Angaben/)
+          end
+
           context 'json' do
             render_views
 
@@ -272,6 +322,23 @@ describe PeopleController do
               person = json['people'].find { |p| p['id'] == @tg_member.id.to_s }
               expect(person['links']['roles'].size).to eq(2)
             end
+          end
+        end
+
+        context 'with contact data' do
+          before { sign_in(@tg_member) }
+
+          it 'exports only address csv when types given and no ability exists' do
+            get :index, group_id: group,
+                        filters: { role: { role_type_ids: [Group::BottomLayer::Leader.id, Group::BottomLayer::Member.id].join('-') } },
+                        range: 'layer',
+                        details: true,
+                        format: :csv
+
+            expect(@response.content_type).to eq('text/csv')
+            expect(@response.body).to match(/^Vorname;Nachname;.*/)
+            expect(@response.body).not_to match(/Zusätzliche Angaben/)
+            expect(@response.body.split("\n").size).to eq(2)
           end
         end
       end
