@@ -21,7 +21,7 @@ class Person::LogController < ApplicationController
   private
 
   def entry
-    @person ||= group.people.find(params[:id])
+    @person ||= Person.join_roles(true).where(roles: { group: group }).find(params[:id])
   end
 
   def group
