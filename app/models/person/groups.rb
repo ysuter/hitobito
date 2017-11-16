@@ -81,19 +81,25 @@ module Person::Groups
       where('roles.type IN (?)', role_types.collect(&:sti_name))
     end
 
+    # Sometimes we want to ignore default role scope when joining
+    def join_roles(with_deleted = false)
+      with_deleted_join = <<-SQL.strip_heredoc.split.map(&:strip).join(' ')
+        INNER JOIN roles ON roles.person_id = people.id
+        INNER JOIN groups ON groups.id = roles.group_id
+      SQL
+      with_deleted ? joins(with_deleted_join) : joins(roles: :group)
+    end
+
     # Scope listing all people with a role in the given layer.
     def in_layer(*groups)
-      joins(roles: :group).
-      where(roles: { deleted_at: nil },
-            groups: { layer_group_id: groups.collect(&:layer_group_id),
+      where(groups: { layer_group_id: groups.collect(&:layer_group_id),
                       deleted_at: nil }).
       uniq
     end
 
     # Scope listing all people with a role in or below the given group.
     def in_or_below(group)
-      joins(roles: :group).
-      where(roles: { deleted_at: nil }, groups: { deleted_at: nil }).
+      where(groups: { deleted_at: nil }).
       where('groups.lft >= :lft AND groups.rgt <= :rgt', lft: group.lft, rgt: group.rgt).
       uniq
     end

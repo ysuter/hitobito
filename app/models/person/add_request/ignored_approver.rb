@@ -29,7 +29,7 @@ class Person::AddRequest::IgnoredApprover < ActiveRecord::Base
     end
 
     def possible_approvers(layer)
-      Person.in_layer(layer).
+      Person.join_roles.in_layer(layer).
         where(roles: { type: approver_role_types.collect(&:sti_name) }).
         uniq
     end

@@ -175,11 +175,11 @@ describe Person do
     end
 
     it 'in_layer returns person for this layer' do
-      expect(Person.in_layer(groups(:bottom_group_one_one))).to match_array([people(:bottom_member), person])
+      expect(Person.join_roles.in_layer(groups(:bottom_group_one_one))).to match_array([people(:bottom_member), person])
     end
 
     it 'in_or_below returns person for above layer' do
-      expect(Person.in_or_below(groups(:top_layer))).to match_array([people(:bottom_member), people(:top_leader), person])
+      expect(Person.join_roles.in_or_below(groups(:top_layer))).to match_array([people(:bottom_member), people(:top_leader), person])
     end
   end
 
@@ -205,11 +205,11 @@ describe Person do
     end
 
     it 'in_layer returns person for this layer' do
-      expect(Person.in_layer(groups(:bottom_group_one_one))).to match_array([people(:bottom_member), person])
+      expect(Person.join_roles.in_layer(groups(:bottom_group_one_one))).to match_array([people(:bottom_member), person])
     end
 
     it 'in_or_below returns person for any layer' do
-      expect(Person.in_or_below(groups(:top_layer))).to match_array([people(:bottom_member), people(:top_leader), person])
+      expect(Person.join_roles.in_or_below(groups(:top_layer))).to match_array([people(:bottom_member), people(:top_leader), person])
     end
   end
 
@@ -230,7 +230,7 @@ describe Person do
     end
 
     it 'is not visible from above in combination with other scopes' do
-      expect(Person.in_or_below(groups(:top_layer)).visible_from_above).not_to include(person)
+      expect(Person.join_roles.in_or_below(groups(:top_layer)).visible_from_above).not_to include(person)
     end
   end
 
