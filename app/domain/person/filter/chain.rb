@@ -48,6 +48,10 @@ class Person::Filter::Chain
     filters.blank?
   end
 
+  def with_deleted_roles?
+    filters.any?(&:with_deleted_roles?)
+  end
+
   def to_hash
     # call #to_hash twice to get a regular hash (without indifferent access)
     build_hash { |f| f.to_hash.to_hash }
