@@ -20,8 +20,8 @@ describe PersonFullReadables do
         people = Person.accessible_by(ability)
         case action
         when :index then people
-        when :layer_search then people.in_layer(group.layer_group)
-        when :deep_search then people.in_or_below(group.layer_group)
+        when :layer_search then people.join_roles.in_layer(group.layer_group)
+        when :deep_search then people.join_roles.in_or_below(group.layer_group)
         when :global then people
         end
       end

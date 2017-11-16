@@ -19,9 +19,10 @@ class PersonReadables < PersonFetchables
 
   delegate :permission_group_ids, :permission_layer_ids, to: :user_context
 
-  def initialize(user, group = nil)
+  def initialize(user, group = nil, with_deleted_roles = false)
     super(user)
     @group = group
+    @with_deleted_roles = with_deleted_roles
 
     if @group.nil?
       can :index, Person, accessible_people { |_| true }
@@ -34,29 +35,32 @@ class PersonReadables < PersonFetchables
 
   def group_accessible_people
     if read_permission_for_this_group?
-      can :index, Person,
-          group.people.only_public_data { |_| true }
+      can :index, Person, person_public_data_with_roles(group) { |_| true }
 
     elsif layer_and_below_read_in_above_layer?
-      can :index, Person,
-          group.people.only_public_data.visible_from_above(group) { |_| true }
-
+      can :index, Person, person_public_data_with_roles(group).visible_from_above(group) { |_| true }
     elsif contact_data_visible?
-      can :index, Person,
-          group.people.only_public_data.contact_data_visible { |_| true }
+      can :index, Person, person_public_data_with_roles(group).contact_data_visible { |_| true }
     end
   end
 
   def accessible_people
     if user.root?
-      Person.only_public_data
+      person_public_data
     else
-      Person.only_public_data
-            .joins(roles: :group)
-            .where(roles: { deleted_at: nil }, groups: { deleted_at: nil })
-            .where(accessible_conditions.to_a)
-            .uniq
+      person_public_data_with_roles
+        .where(accessible_conditions.to_a)
+        .uniq
     end
+  end
+
+  def person_public_data
+    Person.only_public_data
+  end
+
+  def person_public_data_with_roles(group = nil)
+    scope = person_public_data.join_roles(@with_deleted_roles).where(groups: { deleted_at: nil })
+    group ? scope.where(groups: { id: group.id }) : scope
   end
 
   def accessible_conditions
@@ -107,6 +111,10 @@ class PersonReadables < PersonFetchables
   def layer_and_below_read_in_above_layer?
     ids = permission_layer_ids(:layer_and_below_read)
     ids.present? && (ids & group.layer_hierarchy.collect(&:id)).present?
+  end
+
+  def with_deleted_roles?
+    @with_deleted_roles
   end
 
 end

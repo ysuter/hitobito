@@ -15,18 +15,20 @@ describe PersonReadables do
     context action do
       let(:action) { action }
       let(:user)   { role.person.reload }
-      let(:ability) { PersonReadables.new(user, action == :index ? group : nil) }
+      let(:ability) { PersonReadables.new(user, action == :index ? group : nil, with_deleted_roles) }
+      let(:with_deleted_roles) { false }
 
       let(:all_accessibles) do
         people = Person.accessible_by(ability)
         case action
         when :index then people
-        when :layer_search then people.in_layer(group.layer_group)
-        when :deep_search then people.in_or_below(group.layer_group)
+        when :layer_search then
+          people.join_roles(with_deleted_roles).in_layer(group.layer_group)
+        when :deep_search then
+          people.join_roles(with_deleted_roles).in_or_below(group.layer_group)
         when :global then people
         end
       end
-
 
       subject { all_accessibles }
 
@@ -53,6 +55,17 @@ describe PersonReadables do
             other = Fabricate(Role::External.name.to_sym, group: groups(:top_group))
             is_expected.to include(other.person)
           end
+
+          context 'with deleted' do
+            let(:with_deleted_roles) { true }
+            before { allow_any_instance_of(Role).to receive(:old_enough_to_archive?).and_return(true) }
+
+            it 'may get people in his group with deleted role' do
+              other = Fabricate(Group::TopGroup::Leader.name.to_sym, group: groups(:top_group))
+              other.destroy
+              is_expected.to include(other.person)
+            end
+          end
         end
 
         context 'lower group' do
@@ -67,10 +80,25 @@ describe PersonReadables do
             other = Fabricate(Role::External.name.to_sym, group: groups(:bottom_layer_one))
             is_expected.not_to include(other.person)
           end
+
+          context 'with deleted' do
+            let(:with_deleted_roles) { true }
+            before { allow_any_instance_of(Role).to receive(:old_enough_to_archive?).and_return(true) }
+
+            it 'may get visible people with deleted role' do
+              other = Fabricate(Group::BottomLayer::Leader.name.to_sym, group: groups(:bottom_layer_one))
+              other.destroy
+              is_expected.to include(other.person)
+            end
+
+            it 'may not get external people with deleted role' do
+              other = Fabricate(Role::External.name.to_sym, group: groups(:bottom_layer_one))
+              other.destroy
+              is_expected.not_to include(other.person)
+            end
+          end
         end
-
       end
-
 
       context :layer_and_below_read do
         let(:role) { Fabricate(Group::TopGroup::Secretary.name.to_sym, group: groups(:top_group)) }
