@@ -28,6 +28,7 @@ class Person::Filter::List
   private
 
   def filter(scope)
+    scope = scope.join_roles(chain.with_deleted_roles?)
     if chain.present?
       chain.filter(list_range(scope)).uniq
     else
@@ -36,7 +37,7 @@ class Person::Filter::List
   end
 
   def accessibles
-    ability = accessibles_class.new(user, group_range? ? group : nil)
+    ability = accessibles_class.new(user, group_range? ? group : nil, chain.with_deleted_roles?)
     Person.accessible_by(ability)
   end
 
@@ -50,7 +51,7 @@ class Person::Filter::List
   end
 
   def all
-    chain.blank? || group_range? ? group.people : Person
+    chain.blank? || group_range? ? group_people : Person
   end
 
   def list_range(scope)
@@ -68,6 +69,10 @@ class Person::Filter::List
 
   def group_range?
     !%w(deep layer).include?(range)
+  end
+
+  def group_people
+    Person.join_roles(chain.with_deleted_roles?).where(roles: { group: group })
   end
 
   def default_order(entries)

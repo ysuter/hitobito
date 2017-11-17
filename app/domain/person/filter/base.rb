@@ -43,6 +43,10 @@ class Person::Filter::Base
     args
   end
 
+  def with_deleted_roles?
+    false
+  end
+
   private
 
   def id_list(key)

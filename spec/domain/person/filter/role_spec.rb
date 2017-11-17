@@ -88,6 +88,88 @@ describe Person::Filter::Role do
           expect(entries.size).to eq(list_filter.all_count)
         end
       end
+
+      context 'with specific timeframe' do
+        include ActiveSupport::Testing::TimeHelpers
+        let(:role_types) { [Group::TopGroup::Member] }
+        around(:each) { |example| travel_to(Date.new(2017, 02, 28)) { example.run } }
+
+        context 'created' do
+          let(:kind) { :created }
+          before {  Role.where(person: @tg_member).update_all(created_at: '2017-02-01') }
+
+          it 'finds role created within timeframe' do
+            expect(filter(start_at: '2017-02-01').entries).to have(1).item
+            expect(filter(start_at: '2017-02-01').entries).to have(1).item
+            expect(filter(finish_at: '2017-02-01').entries).to have(1).item
+
+            expect(filter(start_at: '2017-02-01', finish_at: '2017-02-01').entries).to have(1).item
+
+            expect(filter(start_at: '2017-02-02').entries).to be_empty
+            expect(filter(finish_at: '2017-01-31').entries).to be_empty
+            expect(filter(start_at: '2017-02-02', finish_at: '2017-02-02').entries).to be_empty
+          end
+        end
+
+        context 'deleted' do
+          let(:kind) { :deleted }
+          before { Role.where(person: @tg_member).update_all(deleted_at: '2017-02-01') }
+
+          it 'finds role deleted within timeframe' do
+            expect(filter(start_at: '2017-02-01').entries).to have(1).item
+            expect(filter(finish_at: '2017-02-01').entries).to have(1).item
+
+            expect(filter(start_at: '2017-02-01', finish_at: '2017-02-01').entries).to have(1).item
+
+            expect(filter(start_at: '2017-02-02').entries).to be_empty
+            expect(filter(finish_at: '2017-01-31').entries).to be_empty
+            expect(filter(start_at: '2017-02-02', finish_at: '2017-02-02').entries).to be_empty
+
+            expect(filter(start_at: '2017-02-01').all_count).to eq(1)
+            expect(filter(finish_at: '2017-01-31').all_count).to eq(0)
+          end
+        end
+
+        context 'active' do
+          let(:kind) { :active }
+
+          it 'finds role active within timeframe' do
+            Role.where(person: @tg_member).update_all(created_at: '2017-02-01')
+            expect(filter(start_at: '2017-02-01').entries).to have(1).item
+            expect(filter(finish_at: '2017-02-01').entries).to have(1).item
+            expect(filter(start_at: '2017-02-04').entries).to have(1).item
+            expect(filter(finish_at: '2017-02-04').entries).to have(1).item
+
+            expect(filter(start_at: '2017-01-31', finish_at: '2017-02-02').entries).to have(1).item
+            expect(filter(start_at: '2017-01-02', finish_at: '2017-02-05').entries).to have(1).item
+            expect(filter(start_at: '2017-01-31', finish_at: '2017-02-05').entries).to have(1).item
+
+            expect(filter(start_at: '2017-01-30', finish_at: '2017-01-31').entries).to be_empty
+            expect(filter(start_at: '2017-02-04', finish_at: '2017-02-05').entries).to have(1).item
+
+            expect(filter(finish_at: '2017-01-31').entries).to be_empty
+          end
+
+          it 'finds deleted role active within timeframe' do
+            Role.where(person: @tg_member).update_all(created_at: '2017-02-01', deleted_at: '2017-02-03')
+            expect(filter(start_at: '2017-02-04').entries).to be_empty
+            expect(filter(finish_at: '2017-01-31').entries).to be_empty
+
+            expect(filter(start_at: '2017-01-31', finish_at: '2017-02-02').entries).to have(1).item
+            expect(filter(start_at: '2017-01-02', finish_at: '2017-02-05').entries).to have(1).item
+            expect(filter(start_at: '2017-01-31', finish_at: '2017-02-05').entries).to have(1).item
+
+            expect(filter(start_at: '2017-01-30', finish_at: '2017-01-31').entries).to be_empty
+            expect(filter(start_at: '2017-02-04', finish_at: '2017-02-05').entries).to be_empty
+          end
+        end
+
+        def filter(attrs)
+          filters = { role: attrs.merge(role_type_ids: role_type_ids_string, kind: kind.to_s) }
+          Person::Filter::List.new(group, user, range: range, filters: filters)
+        end
+
+      end
     end
 
     context 'layer' do
