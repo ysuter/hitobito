@@ -9,6 +9,8 @@ class PeopleController < CrudController
 
   include Concerns::RenderPeopleExports
 
+  respond_to :json
+
   self.nesting = Group
 
   self.remember_params += [:name, :range, :filters, :filter_id]

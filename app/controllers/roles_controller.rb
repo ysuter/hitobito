@@ -7,7 +7,7 @@
 
 class RolesController < CrudController
 
-  respond_to :js
+  respond_to :js, :json
 
   self.nesting = Group
 
