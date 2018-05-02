@@ -1,0 +1,224 @@
+curl -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' http://localhost:3000/groups/1.json | jq .
+
+** Create Person with additional Email (assumes role type and group id are known) **
+
+$ curl -v -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' -H 'Content-Type: application/json' -d '{"role": { "new_person": { "email": "test2@xample.com", "first_name": "a", "last_name": "b", "additional_email_attributes": [ { "name": "privat", "translated_label": "msn", "mailings": "0", "public": "1" } ] }, "type": "Group::TopLayer::Administrator" } }' http://localhost:3000/en/groups/1/roles.json
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 3000 (#0)
+> POST /en/groups/1/roles.json HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/7.47.0
+> Accept: */*
+> X-User-Email: maierhofer@puzzle.ch
+> X-User-Token: Lzu45TpKYavceGzYssys
+> Content-Type: application/json
+> Content-Length: 255
+>
+* upload completely sent off: 255 out of 255 bytes
+< HTTP/1.1 201 Created
+< X-Frame-Options: SAMEORIGIN
+< X-XSS-Protection: 1; mode=block
+< X-Content-Type-Options: nosniff
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: Fri, 01 Jan 1990 00:00:00 GMT
+< Location: /en/groups/1/people/494
+< Content-Type: application/json; charset=utf-8
+< Vary: Accept-Encoding
+< Set-Cookie: locale=en; path=/; expires=Wed, 17 Apr 2019 07:03:58 -0000
+< X-Request-Id: 66eb1161-6c42-49d1-b993-218bbcb8fa83
+< X-Runtime: 0.136539
+< Connection: close
+< Server: thin 1.5.1 codename Straight Razor
+<
+* Closing connection 0
+{"id":491,"person_id":494,"group_id":1,"label":null,"created_at":"2018-04-17T09:03:58.435+02:00","updated_at":"2018-04-17T09:03:58.435+02:00","deleted_at":null} {feature/527-api} hitobito$
+"}" } ] } }}'
+
+** Create Person failed (email already taken) **
+
+ $ curl -v -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' -H 'Content-Type: application/json' -d '{"role": { "new_person": { "email": "test2@xample.com", "first_name": "a", "last_name": "b", "additional_email_attributes": [ { "name": "privat", "translated_label": "msn", "mailings": "0", "public": "1"  }  ]  }, "type": "Group::TopLayer::Administrator"  } }' http://localhost:3000/en/groups/1/roles.json
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 3000 (#0)
+> POST /en/groups/1/roles.json HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/7.47.0
+> Accept: */*
+> X-User-Email: maierhofer@puzzle.ch
+> X-User-Token: Lzu45TpKYavceGzYssys
+> Content-Type: application/json
+> Content-Length: 255
+>
+* upload completely sent off: 255 out of 255 bytes
+< HTTP/1.1 422
+< X-Frame-Options: SAMEORIGIN
+< X-XSS-Protection: 1; mode=block
+< X-Content-Type-Options: nosniff
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: Fri, 01 Jan 1990 00:00:00 GMT
+< Content-Type: application/json; charset=utf-8
+< Vary: Accept-Encoding
+< Set-Cookie: locale=en; path=/; expires=Wed, 17 Apr 2019 07:05:30 -0000
+< X-Request-Id: 482e88c9-775d-4b18-9e69-f0c71f573ba7
+< X-Runtime: 0.119221
+< Connection: close
+< Server: thin 1.5.1 codename Straight Razor
+<
+* Closing connection 0
+{"errors":{}}
+
+
+** Update Person attributes **
+
+curl  -v -X PUT -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' -H 'Content-Type: application/json' -d '{"person": { "first_name": "foo", "last_name": "bar"  } }' http://localhost:3000/en/groups/1/people/489.json
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 3000 (#0)
+> PUT /en/groups/1/people/489.json HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/7.47.0
+> Accept: */*
+> X-User-Email: maierhofer@puzzle.ch
+> X-User-Token: Lzu45TpKYavceGzYssys
+> Content-Type: application/json
+> Content-Length: 56
+>
+* upload completely sent off: 56 out of 56 bytes
+< HTTP/1.1 204 No Content
+< X-Frame-Options: SAMEORIGIN
+< X-XSS-Protection: 1; mode=block
+< X-Content-Type-Options: nosniff
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: Fri, 01 Jan 1990 00:00:00 GMT
+< Set-Cookie: locale=en; path=/; expires=Wed, 17 Apr 2019 07:09:15 -0000
+< X-Request-Id: c9f9224f-8243-4361-b9d3-145a85e484b0
+< X-Runtime: 0.134906
+< Connection: close
+< Server: thin 1.5.1 codename Straight Razor
+<
+* Closing connection 0
+
+** Update Person attributes failed **
+
+curl  -v -X PUT -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' -H 'Content-Type: application/json' -d '{"person": { "first_name": "", "last_name": ""  } }' http://localhost:3000/en/groups/1/people/489.json
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 3000 (#0)
+> PUT /en/groups/1/people/489.json HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/7.47.0
+> Accept: */*
+> X-User-Email: maierhofer@puzzle.ch
+> X-User-Token: Lzu45TpKYavceGzYssys
+> Content-Type: application/json
+> Content-Length: 50
+>
+* upload completely sent off: 50 out of 50 bytes
+< HTTP/1.1 422
+< X-Frame-Options: SAMEORIGIN
+< X-XSS-Protection: 1; mode=block
+< X-Content-Type-Options: nosniff
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: Fri, 01 Jan 1990 00:00:00 GMT
+< Content-Type: application/json; charset=utf-8
+< Vary: Accept-Encoding
+< Set-Cookie: locale=en; path=/; expires=Wed, 17 Apr 2019 07:09:53 -0000
+< X-Request-Id: 1d4c803a-64d7-4e75-a841-094eef1bbf39
+< X-Runtime: 0.100126
+< Connection: close
+< Server: thin 1.5.1 codename Straight Razor
+<
+* Closing connection 0
+{"errors":{"base":["Please enter a name"]}}
+
+
+** Update related Person attributes (delete email, update phone_number add another social account)**
+
+curl  -v -X PUT -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' -H 'Content-Type: application/json' -d '{"person": {"additional_emails_attributes":{"0":{"email":"test1@example.com","translated_label":"Privat","mailings":"0","public":"1","_destroy":"1","id":"170"}},"phone_numbers_attributes":{"0":{"number":"01-123-123-1234","translated_label":"Privat","public":"0","_destroy":"false","id":"610"}},"social_accounts_attributes":{"0":{"name":"me123","translated_label":"Skype","public":"1","_destroy":"false","id":"157"},"1523950094646": {"name": "meiface", "translated_label": "Facebook", "public": "1", "_destroy": "false"} }}}' http://localhost:3000/en/groups/1/people/489.json
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 3000 (#0)
+> PUT /en/groups/1/people/489.json HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/7.47.0
+> Accept: */*
+> X-User-Email: maierhofer@puzzle.ch
+> X-User-Token: Lzu45TpKYavceGzYssys
+> Content-Type: application/json
+> Content-Length: 417
+>
+* upload completely sent off: 417 out of 417 bytes
+< HTTP/1.1 204 No Content
+< X-Frame-Options: SAMEORIGIN
+< X-XSS-Protection: 1; mode=block
+< X-Content-Type-Options: nosniff
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: Fri, 01 Jan 1990 00:00:00 GMT
+< Set-Cookie: locale=en; path=/; expires=Wed, 17 Apr 2019 07:26:47 -0000
+< X-Request-Id: 7840a9d4-4ab1-4e7f-af1d-87ecf4d70b90
+< X-Runtime: 0.156906
+< Connection: close
+< Server: thin 1.5.1 codename Straight Razor
+<
+* Closing connection 0
+
+** Update related Person attributes errors (email not found) **
+
+curl  -v -X PUT -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' -H 'Content-Type: application/json' -d '{"person": {"additional_emails_attributes":{"0":{"email":"test1@example.com","translated_label":"Privat","mailings":"0","public":"1","_destroy":"1","id":"170"}},"phone_numbers_attributes":{"0":{"number":"01-123-123-1234","translated_label":"Privat","public":"0","_destroy":"false","id":"610"}},"social_accounts_attributes":{"0":{"name":"me123","translated_label":"Skype","public":"1","_destroy":"false","id":"157"},"1523950094646": {"name": "meiface", "translated_label": "Facebook", "public": "1", "_destroy": "false"} }}}' http://localhost:3000/en/groups/1/people/489.json
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 3000 (#0)
+> PUT /en/groups/1/people/489.json HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/7.47.0
+> Accept: */*
+> X-User-Email: maierhofer@puzzle.ch
+> X-User-Token: Lzu45TpKYavceGzYssys
+> Content-Type: application/json
+> Content-Length: 417
+>
+* upload completely sent off: 417 out of 417 bytes
+< HTTP/1.1 204 No Content
+< X-Frame-Options: SAMEORIGIN
+< X-XSS-Protection: 1; mode=block
+< X-Content-Type-Options: nosniff
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: Fri, 01 Jan 1990 00:00:00 GMT
+< Set-Cookie: locale=en; path=/; expires=Wed, 17 Apr 2019 07:26:47 -0000
+< X-Request-Id: 7840a9d4-4ab1-4e7f-af1d-87ecf4d70b90
+< X-Runtime: 0.156906
+< Connection: close
+< Server: thin 1.5.1 codename Straight Razor
+<
+* Closing connection 0
+
+
+** Delete existing roles **
+
+curl -v -X DELETE -H 'X-User-Email: maierhofer@puzzle.ch' -H 'X-User-Token: Lzu45TpKYavceGzYssys' -H 'Content-Type: application/json' http://localhost:3000/en/groups/1/roles/492.json
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 3000 (#0)
+> DELETE /en/groups/1/roles/492.json HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/7.47.0
+> Accept: */*
+> X-User-Email: maierhofer@puzzle.ch
+> X-User-Token: Lzu45TpKYavceGzYssys
+> Content-Type: application/json
+>
+< HTTP/1.1 204 No Content
+< X-Frame-Options: SAMEORIGIN
+< X-XSS-Protection: 1; mode=block
+< X-Content-Type-Options: nosniff
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: Fri, 01 Jan 1990 00:00:00 GMT
+< Location: /en/groups/1/roles?returning=true
+< Set-Cookie: locale=en; path=/; expires=Wed, 17 Apr 2019 07:39:25 -0000
+< X-Request-Id: 48e66d52-649d-4070-8a17-a001974e0e98
+< X-Runtime: 0.117155
+< Connection: close
+< Server: thin 1.5.1 codename Straight Razor
+<
+* Closing connection 0
