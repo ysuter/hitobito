@@ -82,15 +82,7 @@ class PeopleController < CrudController
 
   # PUT button, ajax
   def primary_group
-    success = entry.update(primary_group_id: params[:primary_group_id])
-    respond_to do |format|
-      format.html { redirect_to group_person_path(group, entry) }
-      format.js do
-        return render :primary_group if success
-        flash.now.alert = I18n.t('global.errors.header', count: entry.errors.size)
-        render 'shared/update_flash'
-      end
-    end
+    entry.update!(primary_group_id: params[:primary_group_id])
   end
 
   private_class_method

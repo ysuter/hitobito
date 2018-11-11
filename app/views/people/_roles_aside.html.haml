@@ -1,45 +1,51 @@
--#  Copyright (c) 2012-2013, Jungwacht Blauring Schweiz. This file is part of
+-#  Copyright (c) 2012-2018, hitobito AG. This file is part of
 -#  hitobito and licensed under the Affero General Public License version 3
 -#  or later. See the COPYING file at the top-level directory or at
 -#  https://github.com/hitobito/hitobito.
 
 - if grouped_roles.present?
   %section.roles
-    %h2= title
-
-    %table.table.table-basic
-      %tbody
-        - grouped_roles.each do |group, roles|
-          %tr
-            %td
-              - if can?(:primary_group, entry)
-                = link_to(icon(entry.primary_group_id == group.id ? 'star' : 'star-o'),
-                          primary_group_group_person_path(@group, entry, primary_group_id: group.id),
-                          title: t('.set_main_group'),
-                          alt: t('.set_main_group'),
-                          class: "group-#{group.id}",
-                          data: {method: :put, remote: true})
-
-            %td
-              %strong= GroupDecorator.new(group).link_with_layer
-              %br/
-              %table.roles
-                %tbody
-                  - roles.each_with_index do |role, index|
-                    %tr
-                      %td
-                        %strong
-                          = role.to_s
-                      %td= link_action_edit(edit_group_role_path(role.group, role)) if can?(:edit, role)
-                      %td= link_action_destroy(group_role_path(role.group, role)) if can?(:destroy, role)
-
-            %td
-              - if can?(:new, group.roles.new)
-                %span.pull-right
-                  = action_button(t('.add_role'),
-                                  new_group_role_path(group,
-                                                      role: { person_id: entry.id },
-                                                      return_url: group_person_path(group.id, entry.id)),
-                                  :plus,
-                                  class: 'btn btn-small')
-
+    %h2
+      = title
+        - if entry.groups.uniq.length > 1
+        %p.pull-right{style: "font-size: 0.6rem;"}
+          = icon('star')
+          = t(".primary_group")
+          - if can?(:primary_group, entry)
+            %a#show-primary-group-form= t('global.link.edit').downcase
+    .well.edit-primary-group-form{style: "display: none"}
+      .pull-right
+        %a#hide-primary-group-form= icon('close')
+      %h3= t('.primary_group')
+      %select#primary-group-select
+        - entry.groups.uniq.each do |group|
+          %option{value: group.id,
+                  selected: (group.id == entry.primary_group_id),
+                  data: {url: primary_group_group_person_path(@group, entry, primary_group_id: group.id)}}
+            = GroupDecorator.decorate(group).name_with_layer
+      %p= t('.primary_group_explanation')
+    %span.primary-group
+    - grouped_roles.each do |layer, roles|
+      %div{style: "border-top: 1px solid #eee; margin-bottom: 1rem; padding-top: 0.5rem;"}
+        - if can?(:new, layer.roles.new)
+          .pull-right= action_button('', new_group_role_path(layer,
+                                role: { person_id: entry.id },
+                                return_url: group_person_path(layer.id, entry.id)),
+                                :plus,
+                                class: 'btn-small')
+        %strong
+          - if layer.id == entry.primary_group_id
+            = icon('star')
+          = link_to(layer, layer)
+        - entry.roles_grouped(roles).each do |group, roles|
+          %div{style: "padding"}
+            - roles.each_with_index do |role, index|
+              .div
+                .chip
+                  - unless group.layer?
+                    - if group.id == entry.primary_group_id
+                      = icon('star')
+                    = link_to(group, group)
+                  = role
+                  = link_action_edit(edit_group_role_path(role.group, role)) if can?(:edit, role)
+                  = link_action_destroy(group_role_path(role.group, role)) if can?(:destroy, role)

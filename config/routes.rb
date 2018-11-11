@@ -54,6 +54,7 @@ Hitobito::Application.routes.draw do
 
         member do
           post :send_password_instructions
+          get :edit_primary_group
           put :primary_group
 
           get 'history' => 'person/history#index'

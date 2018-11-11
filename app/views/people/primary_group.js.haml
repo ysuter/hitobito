@@ -1,7 +1,1 @@
--#  Copyright (c) 2012-2013, Jungwacht Blauring Schweiz. This file is part of
--#  hitobito and licensed under the Affero General Public License version 3
--#  or later. See the COPYING file at the top-level directory or at
--#  https://github.com/hitobito/hitobito.
-
-$('.fa-star').removeClass('fa-star').addClass('fa-star-o');
-$('a.group-#{params[:primary_group_id]} i').addClass('fa-star').removeClass('fa-star-o');
+App.PersonPrimaryGroup.updateRolesAside('#{escape_javascript(render 'people/roles_aside',title: t('people.roles.title'), grouped_roles: entry.roles_grouped_by_layer)}');

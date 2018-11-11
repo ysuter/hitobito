@@ -82,12 +82,19 @@ class PersonDecorator < ApplicationDecorator
   end
 
   # returns roles grouped by their group
-  def roles_grouped
-    roles.each_with_object(Hash.new { |h, k| h[k] = [] }) do |role, memo|
+  def roles_grouped(subset = roles)
+    grouped_roles = subset.each_with_object(Hash.new { |h, k| h[k] = [] }) do |role, memo|
       memo[role.group] << role
     end
   end
-
+  
+  # returns roles grouped by their layer
+  def roles_grouped_by_layer
+    grouped_roles = roles.each_with_object(Hash.new { |h, k| h[k] = [] }) do |role, memo|        
+      memo[role.group.layer_group] << role
+    end
+  end
+      
   def latest_qualifications_uniq_by_kind
     qualifications.
       includes(:person, qualification_kind: :translations).

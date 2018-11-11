@@ -8,10 +8,10 @@
   white-space: nowrap;
   overflow: hidden;
 
-  i {
+  a i {
     opacity: 0.5;
   }
-  i:hover {
+  a i:hover {
     opacity: 1;
   }
 
@@ -23,7 +23,7 @@
     color: $textColor;
     cursor: pointer;
 
-    i {
+    a i {
       opacity: 0.8;
     }
     &:hover {

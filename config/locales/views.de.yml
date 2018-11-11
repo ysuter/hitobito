@@ -1063,8 +1063,9 @@ de:
       title: Aktive Rollen
 
     roles_aside:
+      primary_group: Hauptgruppe
+      primary_group_explanation: Die Hauptgruppe wird in Tabellen und Export angezeigt, damit man dich klarer zuordnen kannst, wenn du zu mehreren Gruppen gehörst.
       add_role: Rolle hinzufügen
-      set_main_group: Hauptgruppe setzen
 
     tags:
       add_tag: Tag hinzufügen…
