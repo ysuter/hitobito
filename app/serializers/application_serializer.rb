@@ -8,7 +8,7 @@
 require 'oat/adapters/json_api'
 
 class ApplicationSerializer < Oat::Serializer
-  adapter Oat::Adapters::JsonAPI
+  adapter OatAdapterJsonApi
 
   class << self
     # define a schema extension for a given key
