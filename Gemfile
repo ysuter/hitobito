@@ -26,7 +26,7 @@ gem 'delayed_job_active_record'
 gem 'devise', '< 4.0.0' # requires ruby 2.1
 gem 'draper'
 gem 'faker', '< 1.6.4' # uses 2.0 for testing (no explicit requirement, yet)
-gem 'globalize'
+gem 'globalize', '~> 5.1.0'
 gem 'haml'
 gem 'http_accept_language'
 gem 'icalendar'

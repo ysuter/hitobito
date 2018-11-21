@@ -568,8 +568,12 @@ DEPENDENCIES
   fabrication
   faker (< 1.6.4)
   font-awesome-rails (~> 4.7, >= 4.7.0.1)
+<<<<<<< HEAD
   gibbon (~> 3.2)
   globalize
+=======
+  globalize (~> 5.1.0)
+>>>>>>> Set globalize to stable version
   haml
   headless
   hirb
