@@ -5,7 +5,7 @@
 #  or later. See the COPYING file at the top-level directory or at
 #  https://github.com/hitobito/hitobito.
 
-require File.expand_path('../boot', __FILE__)
+require_relative 'boot'
 
 def with_benchmark(tag, &block)
   if ENV['RAILS_ENV'] == 'production'
@@ -21,7 +21,7 @@ with_benchmark('rails') do
 end
 with_benchmark('gems') do
   require 'jquery/rails'
-  Bundler.require(:default, Rails.env)
+  Bundler.require(*Rails.groups)
 end
 
 module Hitobito
