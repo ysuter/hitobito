@@ -11,7 +11,7 @@ gem 'rails', '~> 5.0'
 
 gem 'activerecord-session_store'
 gem 'acts-as-taggable-on'
-gem 'airbrake', '< 5.0' # requires newer errbit
+gem 'airbrake', '~> 5.0'
 gem 'awesome_nested_set'
 gem 'axlsx', '>= 3.0.0.pre'
 gem 'bcrypt-ruby'

@@ -59,9 +59,9 @@ GEM
     addressable (2.5.2)
       public_suffix (>= 2.0.2, < 4.0)
     afm (0.2.2)
-    airbrake (4.3.8)
-      builder
-      multi_json
+    airbrake (5.8.1)
+      airbrake-ruby (~> 1.8)
+    airbrake-ruby (1.8.0)
     annotate (2.7.4)
       activerecord (>= 3.2, < 6.0)
       rake (>= 10.4, < 13.0)
@@ -592,7 +592,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord-session_store
   acts-as-taggable-on
-  airbrake (< 5.0)
+  airbrake (~> 5.0)
   annotate
   awesome_nested_set
   awesome_print
