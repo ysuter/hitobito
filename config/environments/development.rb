@@ -28,6 +28,10 @@ Rails.application.configure do
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.default_url_options = {
+  host: 'localhost:3000',
+  protocol: (%w(true yes 1).include?(ENV['RAILS_HOST_SSL']) ? 'https' : 'http'),
+  locale: nil }
 
   config.action_mailer.perform_caching = false
 
@@ -59,10 +63,4 @@ Rails.application.configure do
         YAML.load("{ #{ENV['RAILS_MAIL_DELIVERY_CONFIG']} }").symbolize_keys
     end
   end
-
-  config.action_mailer.default_url_options = {
-      host: (ENV['RAILS_HOST_NAME'] || raise("No environment variable RAILS_HOST_NAME set!")),
-      protocol: (ssl ? 'https' : 'http'),
-      locale: nil
-    }
 end
