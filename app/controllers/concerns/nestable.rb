@@ -20,8 +20,23 @@ module Nestable
 
     controller.helper_method :parent, :parents
 
-    controller.alias_method_chain :model_scope, :nesting
-    controller.alias_method_chain :path_args, :nesting
+    controller.prepend Nesting
+  end
+
+  module Nesting
+    # An array of objects used in url_for and related functions.
+    def path_args(last)
+      parents + [last]
+    end
+
+    # Uses the parent entry (if any) to constrain the model scope.
+    def model_scope
+      if parent.present?
+        parent_scope
+      else
+        super
+      end
+    end
   end
 
   private
@@ -50,20 +65,6 @@ module Nestable
   def parent_entry(clazz)
     id = params["#{clazz.name.underscore}_id"]
     model_ivar_set(clazz.find(id))
-  end
-
-  # An array of objects used in url_for and related functions.
-  def path_args_with_nesting(last)
-    parents + [last]
-  end
-
-  # Uses the parent entry (if any) to constrain the model scope.
-  def model_scope_with_nesting
-    if parent.present?
-      parent_scope
-    else
-      model_scope_without_nesting
-    end
   end
 
   # The model scope for the current parent resource.
