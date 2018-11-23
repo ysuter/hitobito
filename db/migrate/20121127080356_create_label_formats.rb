@@ -5,7 +5,7 @@
 #  or later. See the COPYING file at the top-level directory or at
 #  https://github.com/hitobito/hitobito.
 
-class CreateLabelFormats < ActiveRecord::Migration
+class CreateLabelFormats < ActiveRecord::Migration[4.2]
   def change
     create_table :label_formats do |t|
       t.string :name, null: false, unique: true

@@ -5,7 +5,7 @@
 #  or later. See the COPYING file at the top-level directory or at
 #  https://github.com/hitobito/hitobito.
 
-class CreateQualifications < ActiveRecord::Migration
+class CreateQualifications < ActiveRecord::Migration[4.2]
   def change
     create_table :qualification_kinds do |t|
       t.string :label, null: false
