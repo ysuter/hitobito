@@ -45,6 +45,7 @@ gem 'protective'
 gem 'rails-i18n'
 gem 'rails_autolink'
 gem 'rubyzip', '~> 1.2.2'
+gem 'savon'
 gem 'seed-fu'
 gem 'simpleidn'
 gem 'sqlite3' # for development, test and production when generating assets

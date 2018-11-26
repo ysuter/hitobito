@@ -55,6 +55,9 @@ GEM
     airbrake (4.3.4)
       builder
       multi_json
+    akami (1.3.1)
+      gyoku (>= 0.4.0)
+      nokogiri
     annotate (2.7.1)
       activerecord (>= 3.2, < 6.0)
       rake (>= 10.4, < 12.0)
@@ -210,6 +213,8 @@ GEM
     globalize (5.0.1)
       activemodel (>= 4.2.0, < 4.3)
       activerecord (>= 4.2.0, < 4.3)
+    gyoku (1.3.1)
+      builder (>= 2.1.2)
     haml (4.0.7)
       tilt
     hashdiff (0.3.7)
@@ -219,6 +224,9 @@ GEM
     hpricot (0.8.6)
     htmlentities (4.3.4)
     http_accept_language (2.1.0)
+    httpi (2.4.4)
+      rack
+      socksify
     i18n (0.9.3)
       concurrent-ruby (~> 1.0)
     i18n_data (0.7.0)
@@ -274,6 +282,7 @@ GEM
     nested_form (0.3.2)
     nokogiri (1.8.5)
       mini_portile2 (~> 2.3.0)
+    nori (2.6.0)
     nuggets (1.5.0)
     oat (0.5.0)
       activesupport
@@ -431,6 +440,14 @@ GEM
       sprockets (>= 2.8, < 4.0)
       sprockets-rails (>= 2.0, < 4.0)
       tilt (>= 1.1, < 3)
+    savon (2.12.0)
+      akami (~> 1.2)
+      builder (>= 2.1.2)
+      gyoku (~> 1.2)
+      httpi (~> 2.3)
+      nokogiri (>= 1.8.1)
+      nori (~> 2.4)
+      wasabi (~> 3.4)
     seed-fu (2.3.6)
       activerecord (>= 3.1)
       activesupport (>= 3.1)
@@ -455,6 +472,7 @@ GEM
       eventmachine (~> 1.0.0)
       thin (>= 1.5, < 1.7)
     slop (3.6.0)
+    socksify (1.7.1)
     sort_alphabetical (1.0.2)
       unicode_utils (>= 1.2.2)
     spring (2.0.1)
@@ -509,6 +527,9 @@ GEM
       seed-fu-ndo (>= 0.0.2)
     warden (1.2.7)
       rack (>= 1.0)
+    wasabi (3.5.0)
+      httpi (~> 2.0)
+      nokogiri (>= 1.4.2)
     webmock (3.4.2)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -610,6 +631,7 @@ DEPENDENCIES
   ruby-prof
   rubyzip (~> 1.2.2)
   sass-rails
+  savon
   seed-fu
   selenium-webdriver
   simplecov-rcov
@@ -629,4 +651,4 @@ DEPENDENCIES
   wirble
 
 BUNDLED WITH
-   1.16.0
+   1.16.6
