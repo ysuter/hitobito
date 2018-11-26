@@ -26,7 +26,7 @@ class Savon::Response
     def parse_body
       @parts = Mail::Part.new(
         headers: http.headers,
-        body: http.body
+        body: http.raw_body
       ).body.split!(boundary).parts
       @has_parsed_body = true
     end
@@ -49,6 +49,13 @@ class Savon::Response
       @xop_body = parsed.to_s
       @has_parsed_xop = true
     end
+
+    # Do not raise errors those are handled internal
+    def raise_soap_and_http_errors!
+      # raise soap_fault if soap_fault?
+      # raise http_error if http_error?
+    end
+
   end
 
   prepend Patch
