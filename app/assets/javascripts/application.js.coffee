@@ -15,22 +15,13 @@
 # WARNING: THE FIRST BLANK LINE MARKS THE END OF WHAT'S TO BE PROCESSED, ANY
 # BLANK LINE SHOULD GO AFTER THE REQUIRES BELOW.
 #
+#= require js.cookie
 #= require jquery
-#= require jquery.cookie
 #= require jquery_ujs
 #= require jquery-ui/widgets/datepicker
 #= require jquery-ui-datepicker-i18n
 #= require jquery-ui/effects/effect-highlight
-#= require bootstrap-transition
-#= require bootstrap-alert
-#= require bootstrap-button
-#= require bootstrap-collapse
-#= require bootstrap-dropdown
-#= require bootstrap-tooltip
-#= require bootstrap-popover
-#= require bootstrap-typeahead
-#= require bootstrap-tab
-#= require bootstrap-modal
+#= require bootstrap
 #= require jquery_nested_form
 #= require chosen-jquery
 #= require jquery.remotipart

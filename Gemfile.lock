@@ -67,8 +67,6 @@ GEM
       rake (>= 10.4, < 13.0)
     arel (8.0.0)
     ast (2.4.0)
-    autoprefixer-rails (9.3.1)
-      execjs
     awesome_nested_set (3.1.4)
       activerecord (>= 4.0.0, < 5.3)
     awesome_print (1.8.0)
@@ -82,9 +80,8 @@ GEM
       bcrypt (>= 3.1.3)
     binding_of_caller (0.8.0)
       debug_inspector (>= 0.0.1)
-    bootstrap-sass (3.3.7)
-      autoprefixer-rails (>= 5.2.1)
-      sass (>= 3.3.4)
+    bootstrap-sass (2.3.2.2)
+      sass (~> 3.2)
     bootstrap-wysihtml5-rails (0.3.3.8)
       railties (>= 3.0)
     brakeman (4.3.1)
@@ -599,7 +596,7 @@ DEPENDENCIES
   axlsx (>= 3.0.0.pre)
   bcrypt-ruby
   binding_of_caller
-  bootstrap-sass
+  bootstrap-sass (~> 2.3)
   bootstrap-wysihtml5-rails
   brakeman
   bullet

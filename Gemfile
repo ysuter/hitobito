@@ -61,7 +61,7 @@ gem 'gibbon', '~> 3.2'
 # load after others because of active record inherited alias chain.
 
 # Gems used only for assets
-gem 'bootstrap-sass'
+gem 'bootstrap-sass', '~> 2.3'
 gem 'bootstrap-wysihtml5-rails'
 gem 'chosen-rails'
 gem 'coffee-rails'

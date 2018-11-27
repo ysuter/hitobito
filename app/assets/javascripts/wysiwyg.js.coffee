@@ -6,7 +6,6 @@
 # This is a manifest file that'll be compiled into wysiwyg.js, which will include all the files
 # listed below.
 #
-#= require bootstrap-modal
 #= require bootstrap-wysihtml5
 #= require bootstrap-wysihtml5/locales/de-DE
 #= require bootstrap-wysihtml5/locales/fr-FR
