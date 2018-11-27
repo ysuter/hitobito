@@ -15,15 +15,15 @@ class app.AsyncDownloads
     setInterval(( -> checkDownload()), 5000)
 
   checkDownloadCookie = ->
-    if $.cookie('async_downloads') == null
+    if Cookies.get('async_downloads') == undefined
       $('#file-download-spinner').addClass('hidden')
       return
 
   checkDownload = ->
-    return if $.cookie('async_downloads') == null
+    return if Cookies.get('async_downloads') == undefined
     $('#file-download-spinner').removeClass('hidden')
 
-    $.each JSON.parse($.cookie('async_downloads')), (index, download) ->
+    $.each JSON.parse(Cookies.get('async_downloads')), (index, download) ->
       $.ajax(
         url: "/downloads/#{download['name']}/exists",
         data: "file_type=#{download['type']}",
