@@ -27,11 +27,11 @@ class Person::Filter::List
     filter.where(id: accessibles.unscope(:select).pluck(:id).keep_if do |id|
       next true if @ids.blank?
       @ids.include? id.to_s
-    end).uniq
+    end).distinct
   end
 
   def all_count
-    @all_count ||= filter.uniq.count
+    @all_count ||= filter.distinct.count
   end
 
   private

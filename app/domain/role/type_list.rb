@@ -25,7 +25,7 @@ class Role
     # hash with the form {layer: {group: [roles]}}
     def compose
       @global_group_types = find_global_group_types(root, root)
-      @global_role_types = find_global_role_types(root).uniq
+      @global_role_types = find_global_role_types(root).distinct
       @role_types = Hash.new { |h0, k0| h0[k0] = Hash.new { |h1, k1| h1[k1] = [] } }
 
       # layers
@@ -74,7 +74,7 @@ class Role
     def find_global_group_types(group, layer, _group_layers = {})
       group_layers = {}
       find_group_layers(group, layer, group_layers)
-      group_layers.select { |_, layers| layers.uniq.size > 1 }
+      group_layers.select { |_, layers| layers.distinct.size > 1 }
                   .collect(&:first)
     end
 

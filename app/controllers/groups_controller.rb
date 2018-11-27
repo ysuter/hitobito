@@ -18,7 +18,7 @@ class GroupsController < CrudController
 
   decorates :group, :groups, :contact
 
-  before_render_show :active_sub_groups, if: -> { html_request? }
+  before_action :active_sub_groups, only: :show, if: -> { html_request? }
   before_render_form :load_contacts
 
 

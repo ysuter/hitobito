@@ -90,7 +90,7 @@ class RoleListsController < CrudController
   end
 
   def people
-    @people ||= Person.where(id: people_ids).uniq
+    @people ||= Person.where(id: people_ids).distinct
   end
 
   def people_ids

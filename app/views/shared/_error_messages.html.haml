@@ -6,5 +6,5 @@
 - if errors.any?
   #error_explanation.alert.alert-error
     %ul
-      - errors.full_messages.uniq.each do |msg|
+      - errors.full_messages.distinct.each do |msg|
         %li= msg

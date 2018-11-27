@@ -98,6 +98,7 @@ module Dropdown
 
     def render(template)
       template.content_tag(:li, class: css_class) do
+        url = url.permit(:controller, :action, :group_id, :id) unless url.is_a?(String) || url.nil?
         template.safe_join([template.link_to(label, url, options),
                             render_sub_items(template)].compact)
       end

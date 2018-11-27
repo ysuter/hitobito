@@ -70,7 +70,7 @@ class MailingList < ActiveRecord::Base
   end
 
   def preferred_labels=(labels)
-    self[:preferred_labels] = labels.reject(&:blank?).collect(&:strip).uniq.sort
+    self[:preferred_labels] = labels.reject(&:blank?).collect(&:strip).distinct.sort
   end
 
   def mail_address
@@ -106,7 +106,7 @@ class MailingList < ActiveRecord::Base
       where(subscriptions: { mailing_list_id: id }).
       where("people.id NOT IN (#{excluded_person_subscribers.to_sql})").
       where(suscriber_conditions).
-      uniq
+      distinct
   end
 
   private

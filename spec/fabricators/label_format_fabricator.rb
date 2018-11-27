@@ -25,7 +25,6 @@
 
 
 Fabricator(:label_format) do
-  name { Faker::Name.first_name }
   page_size { 'A4' }
   landscape { false }
   font_size { 12 }

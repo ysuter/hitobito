@@ -21,7 +21,7 @@ class Event::QualificationsController < ApplicationController
   def update
     Qualification.transaction do
       entries
-      (@leaders + @participants).uniq.each do |participation|
+      (@leaders + @participants).distinct.each do |participation|
         qualifier = Event::Qualifier.for(participation)
         qualified = Array(params[:participation_ids]).include?(participation.id.to_s)
         qualified ? qualifier.issue : qualifier.revoke

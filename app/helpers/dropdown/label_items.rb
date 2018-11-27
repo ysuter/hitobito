@@ -49,7 +49,7 @@ module Dropdown
     end
 
     def add_label_format_items(parent)
-      LabelFormat.list.for_person(user).each do |label_format|
+      LabelFormat.for_person(user).list.each do |label_format|
         parent.sub_items << Item.new(label_format, export_label_format_path(label_format.id),
                                      target: :new, class: 'export-label-format')
       end

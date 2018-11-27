@@ -55,7 +55,7 @@ class Group::Merger
   end
 
   def update_events
-    events = (group1.events + group2.events).uniq
+    events = (group1.events + group2.events).distinct
     events.each do |event|
       event.groups << new_group
       event.save!

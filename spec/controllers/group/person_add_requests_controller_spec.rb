@@ -18,47 +18,44 @@ describe Group::PersonAddRequestsController do
     context 'status notification' do
 
       it 'shows nothing if no params passed' do
-        get :index, group_id: group.id
+        get :index, params: { group_id: group.id }
 
         expect(flash[:notice]).to be_blank
         expect(flash[:alert]).to be_blank
       end
 
       it 'shows nothing if not all params passed' do
-        get :index, group_id: group.id, person_id: 42, body_id: 10
+        get :index, params: { group_id: group.id, person_id: 42, body_id: 10 }
 
         expect(flash[:notice]).to be_blank
         expect(flash[:alert]).to be_blank
       end
 
       it 'shows nothing if person_id not in layer' do
-        get :index,
-            group_id: group.id,
-            person_id: people(:bottom_member).id,
-            body_id: groups(:top_group).id,
-            body_type: 'Group'
+        get :index, params: { group_id: group.id,
+                              person_id: people(:bottom_member).id,
+                              body_id: groups(:top_group).id,
+                              body_type: 'Group' }
 
         expect(flash[:notice]).to be_blank
         expect(flash[:alert]).to be_blank
       end
 
       it 'shows approved message if role exists' do
-        get :index,
-            group_id: group.id,
-            person_id: people(:top_leader).id,
-            body_id: groups(:top_group).id,
-            body_type: 'Group'
+        get :index, params: { group_id: group.id,
+                              person_id: people(:top_leader).id,
+                              body_id: groups(:top_group).id,
+                              body_type: 'Group' }
 
         expect(flash[:notice]).to match(/freigegeben/)
         expect(flash[:alert]).to be_blank
       end
 
       it 'shows rejected message if role does not exist' do
-        get :index,
-            group_id: group.id,
-            person_id: people(:top_leader).id,
-            body_id: groups(:top_layer).id,
-            body_type: 'Group'
+        get :index, params: { group_id: group.id,
+                              person_id: people(:top_leader).id,
+                              body_id: groups(:top_layer).id,
+                              body_type: 'Group' }
 
         expect(flash[:notice]).to be_blank
         expect(flash[:alert]).to match(/abgelehnt/)
@@ -72,11 +69,10 @@ describe Group::PersonAddRequestsController do
           requester: people(:bottom_member)
         )
 
-        get :index,
-            group_id: group.id,
-            person_id: people(:top_leader).id,
-            body_id: groups(:top_layer).id,
-            body_type: 'Group'
+        get :index, params: { group_id: group.id,
+                              person_id: people(:top_leader).id,
+                              body_id: groups(:top_layer).id,
+                              body_type: 'Group' }
 
         expect(flash[:notice]).to be_blank
         expect(flash[:alert]).to be_blank
@@ -91,7 +87,7 @@ describe Group::PersonAddRequestsController do
     let(:other_group) { groups(:bottom_layer_one) }
 
     it 'activates person add requests requirement if user has write permissions' do
-      post :activate, group_id: group.id
+      post :activate, params: { group_id: group.id }
 
       expect(group.reload.require_person_add_requests).to be true
       expect(flash[:notice]).to match(/aktiviert/)
@@ -99,7 +95,7 @@ describe Group::PersonAddRequestsController do
 
     it 'access denied when trying to activate for other group' do
       expect do
-        post :activate, group_id: other_group.id
+        post :activate, params: { group_id: other_group.id }
       end.to raise_error(CanCan::AccessDenied)
     end
 
@@ -111,7 +107,7 @@ describe Group::PersonAddRequestsController do
     let(:other_group) { groups(:bottom_layer_one) }
 
     it 'deactivates person add requests requirement if user has write permissions' do
-      delete :deactivate, group_id: group.id
+      delete :deactivate, params: { group_id: group.id }
 
       expect(group.reload.require_person_add_requests).to be false
       expect(flash[:notice]).to match(/deaktiviert/)
@@ -119,7 +115,7 @@ describe Group::PersonAddRequestsController do
 
     it 'access denied when trying to deactivate for other group' do
       expect do
-        delete :deactivate, group_id: other_group.id
+        delete :deactivate, params: { group_id: other_group.id }
       end.to raise_error(CanCan::AccessDenied)
     end
 

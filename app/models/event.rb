@@ -155,7 +155,7 @@ class Event < ActiveRecord::Base # rubocop:disable Metrics/ClassLength:
       order_by_date.
         order(:name).
         preload_all_dates.
-        uniq
+        distinct
     end
 
     def preload_all_dates

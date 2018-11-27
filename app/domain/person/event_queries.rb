@@ -19,7 +19,7 @@ class Person::EventQueries
       includes(event: [:groups]).
       joins(event: :dates).
       order('event_dates.start_at').
-      uniq.tap do |applications|
+      distinct.tap do |applications|
       Event::PreloadAllDates.for(applications.collect(&:event))
     end
   end
@@ -28,17 +28,17 @@ class Person::EventQueries
     person.events.
       upcoming.
       merge(Event::Participation.active).
-      uniq.
       includes(:groups).
       preload_all_dates.
-      order_by_date
+      order_by_date.
+      distinct
   end
 
   def alltime_participations
     person.event_participations.
       active.
       includes(:roles, event: [:dates, :groups]).
-      uniq.
+      distinct.
       order('event_dates.start_at DESC')
   end
 

@@ -33,15 +33,15 @@ class InvoiceArticle < ActiveRecord::Base
   validates_by_schema
 
   def self.categories
-    pluck(:category).uniq
+    pluck(:category).distinct
   end
 
   def self.cost_centers
-    pluck(:cost_center).uniq
+    pluck(:cost_center).distinct
   end
 
   def self.accounts
-    pluck(:account).uniq
+    pluck(:account).distinct
   end
 
   def to_s

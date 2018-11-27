@@ -40,7 +40,7 @@ module Export::Tabular::People
       qualification_kinds = people.flat_map do |p|
         p.qualifications.map { |q| q.qualification_kind.label }
       end
-      qualification_kinds.uniq.sort.each_with_object({}) do |label, obj|
+      qualification_kinds.distinct.sort.each_with_object({}) do |label, obj|
         if label.present?
           obj[ContactAccounts.key(QualificationKind, label)] = label
         end

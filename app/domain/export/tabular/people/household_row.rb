@@ -71,7 +71,7 @@ module Export::Tabular::People
     end
 
     def length
-      names_hash.keys.uniq.join.size + names_hash.values.join.size
+      names_hash.keys.distinct.join.size + names_hash.values.join.size
     end
 
   end

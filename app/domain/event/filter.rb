@@ -25,7 +25,7 @@ class Event::Filter
       in_year(year).
       order_by_date.
       preload_all_dates.
-      uniq
+      distinct
 
     sort_expression ? scope.reorder(sort_expression) : scope
   end

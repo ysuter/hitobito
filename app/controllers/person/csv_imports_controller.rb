@@ -168,7 +168,7 @@ class Person::CsvImportsController < ApplicationController
     attrs = field_mappings.values
     attrs.select do |attr|
       attr.present? && attrs.count(attr) > 1
-    end.uniq
+    end.distinct
   end
 
   def map_headers_and_import

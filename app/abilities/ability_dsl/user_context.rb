@@ -94,7 +94,7 @@ module AbilityDsl
 
     def group_ids_with_permission(source, permission)
       if permission == :any
-        source.values.flatten.uniq
+        source.values.flatten.distinct
       else
         source[permission]
       end
