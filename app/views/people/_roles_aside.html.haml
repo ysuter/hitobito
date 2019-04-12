@@ -34,7 +34,7 @@
                                 :plus,
                                 class: 'btn-small')
         %strong
-          - if layer.id == entry.primary_group_id
+          - if layer.id == entry.primary_group_id && entry.groups.uniq.length > 1
             = icon('star')
           = link_to(layer, layer)
         - entry.roles_grouped(roles).each do |group, roles|
@@ -43,7 +43,7 @@
               .div
                 .chip
                   - unless group.layer?
-                    - if group.id == entry.primary_group_id
+                    - if group.id == entry.primary_group_id && entry.groups.uniq.length > 1
                       = icon('star')
                     = link_to(group, group)
                   = role
