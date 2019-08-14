@@ -49,6 +49,7 @@ gem 'rails-i18n'
 gem 'rails_autolink'
 gem 'rubyzip'
 gem 'seed-fu'
+gem 'sentry-raven'
 gem 'simpleidn'
 gem 'sqlite3' # for development, test and production when generating assets
 gem 'thinking-sphinx'
