@@ -12,6 +12,9 @@ env:
 rvm:
   - 2.2.3
   - 2.5.5
+before_script:
+  - bundle exec rails runner "require 'webdrivers'; Webdrivers::Chromedriver.update"
+
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install sphinxsearch
