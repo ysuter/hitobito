@@ -70,10 +70,31 @@ module Synchronize
 
       def execute_batch(list)
         operations = list.collect do |item|
-          yield item
+          yield(item).tap do |operation|
+            Rails.logger.info "mailchimp: #{list_id}, op: #{operation[:method]}, item: #{item}"
+            Rails.logger.info operation
+          end
         end
 
-        api.batches.create(body: { operations: operations })
+        if operations.present?
+          batch_id = api.batches.create(body: { operations: operations }).body.fetch('id')
+          wait_for_finish(batch_id)
+        end
+      end
+
+      def wait_for_finish(batch_id, count = 0)
+        sleep 1 * count
+        body = api.batches(batch_id).retrieve.body
+        status = body.fetch('status')
+
+        Rails.logger.info "batch #{batch_id}, status: #{status}"
+        fail "Batch #{batch_id} did not finish in due time, last status: #{status}" if count > 10
+
+        if status != 'finished'
+          wait_for_finish(batch_id, count + 1)
+        else
+          Rails.logger.info body.slice( 'total_operations', 'finished_operations', 'errored_operations')
+        end
       end
 
       def subscriber_body(person)
