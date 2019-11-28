@@ -60,7 +60,7 @@ module MailRelay
           end
         end
 
-        [mails, last_exception]
+        [mails || [], last_exception]
       end
 
       # rubocop:disable Rails/Output
