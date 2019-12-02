@@ -9,9 +9,14 @@ require 'spec_helper'
 
 describe MailRelay::Base do
 
-  let(:simple)  { Mail.new(File.read(Rails.root.join('spec', 'fixtures', 'email', 'simple.eml'))) }
-  let(:regular) { Mail.new(File.read(Rails.root.join('spec', 'fixtures', 'email', 'regular.eml'))) }
-  let(:list)    { Mail.new(File.read(Rails.root.join('spec', 'fixtures', 'email', 'list.eml'))) }
+
+  let(:mails)                  { Rails.root.join('spec', 'fixtures', 'email') }
+  let(:simple)                 { Mail.new(mails.join('simple.eml').read) }
+  let(:regular)                { Mail.new(mails.join('regular.eml').read) }
+  let(:list)                   { Mail.new(mails.join('list.eml').read) }
+  let(:multiple)               { Mail.new(mails.join('multiple.eml').read) }
+  let(:multiple_both)          { Mail.new(mails.join('multiple_both.eml').read) }
+  let(:multiple_x_original_to) { Mail.new(mails.join('multiple_x_original_to.eml').read) }
 
   let(:relay) { MailRelay::Base.new(message) }
 
@@ -48,6 +53,27 @@ describe MailRelay::Base do
   end
 
   describe '#envelope_receiver_name' do
+    context 'multiple' do
+      let(:message) { multiple }
+
+      it 'returns single receiver' do
+        expect(relay.envelope_receiver_name).to eq('kalei.kontakt')
+      end
+    end
+    context 'multiple both' do
+      let(:message) { multiple_both }
+
+      it 'returns single receiver' do
+        expect(relay.envelope_receiver_name).to eq('kalei.kontakt')
+      end
+    end
+    context 'multiple x-original-to' do
+      let(:message) { multiple_x_original_to }
+
+      it 'returns single receiver' do
+        expect(relay.envelope_receiver_name).to eq('amatest')
+      end
+    end
     context 'regular' do
       let(:message) { regular }
 
@@ -163,6 +189,27 @@ describe MailRelay::Base do
 
       MailRelay::Base.relay_current
     end
+
+    it 'skips already processed mail, does not sends airbrake notification if mail_log is completed' do
+      log = MailLog.build(simple)
+      log.update(status: 2)
+      log.save!
+
+      expect(Mail).to receive(:find_and_delete) do |options, &block|
+        block.call(simple)
+        [simple]
+      end
+
+      expect(Airbrake).not_to receive(:notify) do |exception|
+        expect(exception.message).to match(
+          /Mail with subject 'Re: Jubla Gruppen' has already been processed before and is skipped/)
+        expect(exception.message).to match(
+          /1b498b5a776254310c3699688680b37a$/)
+      end
+
+      MailRelay::Base.relay_current
+    end
+
 
     it 'creates mail log entry for sent bulk mail' do
       expect(Mail).to receive(:find_and_delete) do |options, &block|
