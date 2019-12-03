@@ -262,6 +262,31 @@ describe Invoice do
     expect(Invoice.order_by_sequence_number).to eq [i4, i5, i2, i3, i6, i1]
   end
 
+  context '.in' do
+    let(:year)    { Date.today.year }
+    let(:invoice) { invoices(:invoice) }
+    let(:sent)    { invoices(:sent) }
+
+    it 'all invoices are in current year' do
+      expect(Invoice.in(year).count).to eq 2
+    end
+
+    it 'keeps scoping for invalid year' do
+      expect(Invoice.in('invalid').count).to eq 2
+    end
+
+    it 'excludes invoice if issued in another year' do
+      sent.update(issued_at: 1.year.ago)
+      expect(Invoice.in(year)).to eq([invoice])
+    end
+
+    it 'excludes invoice if not yet issued and created in another year' do
+      sent.update(issued_at: 1.year.ago)
+      invoice.update(created_at: 1.year.ago)
+      expect(Invoice.in(year)).to eq([])
+    end
+  end
+
   private
 
   def contactables(*args)

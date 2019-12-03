@@ -16,6 +16,7 @@ class OrCondition
     @condition.first << ' OR ' if present?
     @condition.first << "(#{clause})"
     @condition.push(*args)
+    self
   end
 
   def to_a

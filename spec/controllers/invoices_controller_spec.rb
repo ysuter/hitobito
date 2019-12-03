@@ -66,6 +66,12 @@ describe InvoicesController do
       expect(assigns(:invoices)).to have(1).item
     end
 
+    it 'filters invoices by year' do
+      invoice.update(created_at: 1.year.ago)
+      get :index, group_id: group.id, year: 1.year.ago.year
+      expect(assigns(:invoices)).to eq [invoice]
+    end
+
     it 'filters invoices by due_since' do
       invoice.update(due_at: 2.weeks.ago)
       get :index, group_id: group.id, due_since: :one_week
