@@ -20,8 +20,6 @@ module Synchronize
         client.delete(obsolete_emails)
       end
 
-      private
-
       def missing_people
         people.reject do |person|
           mailchimp_emails.include?(person.email)
@@ -31,6 +29,12 @@ module Synchronize
       def obsolete_emails
         mailchimp_emails - people.collect(&:email)
       end
+
+      def client
+        @client ||= Client.new(mailing_list)
+      end
+
+      private
 
       def people
         @people ||= mailing_list.people
@@ -42,11 +46,6 @@ module Synchronize
           member[:email_address]
         end
       end
-
-      def client
-        @client ||= Client.new(mailing_list)
-      end
-
     end
   end
 end
