@@ -30,6 +30,7 @@
 class MailingList < ActiveRecord::Base
 
   serialize :preferred_labels, Array
+  attribute :mailchimp_result, Synchronize::Mailchimp::ResultType.new
 
   belongs_to :group
 
@@ -107,6 +108,10 @@ class MailingList < ActiveRecord::Base
       where("people.id NOT IN (#{excluded_person_subscribers.to_sql})").
       where(suscriber_conditions).
       distinct
+  end
+
+  def sync
+    Synchronize::Mailchimp::Synchronizator.new(self).call
   end
 
   private
@@ -189,8 +194,6 @@ class MailingList < ActiveRecord::Base
     config = Settings.email.retriever.config
     config.presence && config.user_name.presence
   end
-
-  private
 
   def schedule_mailchimp_destroy
     MailchimpDestructionJob.new(mailchimp_list_id, mailchimp_api_key, people).enqueue!

@@ -40,7 +40,7 @@ module Synchronize
       end
 
       def badge_info
-        state = STATE_BADGES.keys.find { |key| send("#{state}?") }
+        state = STATE_BADGES.keys.find { |key| send("#{key}?") }
         [state, STATE_BADGES[state]]
       end
 
