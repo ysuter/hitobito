@@ -83,7 +83,7 @@ module Synchronize
       end
 
       def wait_for_finish(batch_id, count = 0)
-        sleep 1 * count
+        sleep count * count
         body = api.batches(batch_id).retrieve.body
         status = body.fetch('status')
 
