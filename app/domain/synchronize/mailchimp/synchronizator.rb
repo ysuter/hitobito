@@ -9,15 +9,17 @@ module Synchronize
   module Mailchimp
     class Synchronizator
 
-      attr_reader :mailing_list
+      attr_reader :mailing_list, :result
 
       def initialize(mailing_list)
         @mailing_list = mailing_list
+        @result = Result.new
       end
 
       def call
-        client.subscribe(missing_people)
-        client.delete(obsolete_emails)
+        subscribe_missing
+        delete_obsolete
+        update_list
       end
 
       def missing_people
@@ -35,6 +37,21 @@ module Synchronize
       end
 
       private
+
+      def update_list
+        mailing_list.update(
+          mailchimp_last_synced_at: Time.zone.now,
+          mailchimp_result: result
+        )
+      end
+
+      def subscribe_missing
+        result.subscribed = client.subscribe(missing_people)
+      end
+
+      def delete_obsolete
+        result.deleted = client.delete(obsolete_emails)
+      end
 
       def people
         @people ||= mailing_list.people

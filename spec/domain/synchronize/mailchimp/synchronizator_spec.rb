@@ -52,6 +52,14 @@ describe Synchronize::Mailchimp::Synchronizator do
   end
 
   context '#call' do
+    def result(total, finished, errored)
+      {
+        'total_operations' => total,
+        'finished_operations' => finished,
+        'errored_operations' => errored
+      }
+    end
+
     it 'calls operations with empty lists' do
       allow(subject).to receive(:mailchimp_emails).and_return([])
 
@@ -59,6 +67,9 @@ describe Synchronize::Mailchimp::Synchronizator do
       expect(subject.client).to receive(:delete).with([])
 
       subject.call
+      expect(subject.result).to be_unchanged
+      expect(mailing_list.reload.mailchimp_result).to be_present
+      expect(mailing_list.mailchimp_last_synced_at).to be_present
     end
 
     it 'subscribes missing person' do
@@ -69,6 +80,7 @@ describe Synchronize::Mailchimp::Synchronizator do
       expect(subject.client).to receive(:delete).with([])
 
       subject.call
+      expect(subject.result).to be_success
     end
 
     it 'removes obsolete person' do
@@ -78,6 +90,18 @@ describe Synchronize::Mailchimp::Synchronizator do
       expect(subject.client).to receive(:delete).with([user.email])
 
       subject.call
+      expect(subject.result).to be_success
     end
+
+    it 'knows about partial result' do
+      allow(subject).to receive(:mailchimp_emails).and_return([user.email])
+
+      expect(subject.client).to receive(:subscribe).with([])
+      expect(subject.client).to receive(:delete).with([user.email]).and_return(result(2,1,1))
+
+      subject.call
+      expect(subject.result).to be_partial
+    end
+
   end
 end
