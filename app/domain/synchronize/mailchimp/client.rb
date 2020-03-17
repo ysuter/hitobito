@@ -11,11 +11,11 @@ module Synchronize
     class Client
       attr_reader :list_id, :count, :api
 
-      def initialize(mailing_list, count = 50)
+      def initialize(mailing_list, count = 50, debug = false)
         @list_id = mailing_list.mailchimp_list_id
         @count   = count
 
-        @api = Gibbon::Request.new(api_key: mailing_list.mailchimp_api_key)
+        @api = Gibbon::Request.new(api_key: mailing_list.mailchimp_api_key, debug: debug)
       end
 
       def members
@@ -71,8 +71,8 @@ module Synchronize
       def execute_batch(list)
         operations = list.collect do |item|
           yield(item).tap do |operation|
-            Rails.logger.info "mailchimp: #{list_id}, op: #{operation[:method]}, item: #{item}"
-            Rails.logger.info operation
+            logger.info "mailchimp: #{list_id}, op: #{operation[:method]}, item: #{item}"
+            logger.info operation
           end
         end
 
@@ -87,14 +87,20 @@ module Synchronize
         body = api.batches(batch_id).retrieve.body
         status = body.fetch('status')
 
-        Rails.logger.info "batch #{batch_id}, status: #{status}"
+        logger.info "batch #{batch_id}, status: #{status}"
         fail "Batch #{batch_id} did not finish in due time, last status: #{status}" if count > 10
 
         if status != 'finished'
           wait_for_finish(batch_id, count + 1)
         else
-          Rails.logger.info body.slice( 'total_operations', 'finished_operations', 'errored_operations')
+          body.slice( 'total_operations', 'finished_operations', 'errored_operations').tap do |result|
+            logger.info result
+          end
         end
+      end
+
+      def logger
+        Rails.logger
       end
 
       def subscriber_body(person)
