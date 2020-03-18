@@ -56,6 +56,8 @@ class MailingList < ActiveRecord::Base
 
   after_destroy :schedule_mailchimp_destroy, if: :mailchimp?
 
+  scope :mailchimp, -> { where.not(mailchimp_api_key: ['', nil], mailchimp_list_id: ['', nil]) }
+
   DEFAULT_LABEL = '_main'.freeze
 
   def to_s(_format = :default)
