@@ -19,12 +19,15 @@ module Synchronize
       def call
         subscribe_missing
         delete_obsolete
+      rescue => e
+        result.exception = e
+      ensure
         update_list
       end
 
       def missing_people
         people.reject do |person|
-          mailchimp_emails.include?(person.email)
+          mailchimp_emails.include?(person.email) || person.email.blank?
         end
       end
 

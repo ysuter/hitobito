@@ -613,8 +613,8 @@ de:
         mailchimp_state: 'Mailchimp Status'
         mailchimp_states:
           unchanged: Unverändert
-          success: Erfolgreich
-          partial: Partiell
+          success: Aktualisiert
+          partial: Teilweise
           failed: Fehlgeschlagen
 
       subscription:

@@ -67,7 +67,7 @@ describe Synchronize::Mailchimp::Synchronizator do
       expect(subject.client).to receive(:delete).with([])
 
       subject.call
-      expect(subject.result).to be_unchanged
+      expect(subject.result.state).to eq :unchanged
       expect(mailing_list.reload.mailchimp_result).to be_present
       expect(mailing_list.mailchimp_last_synced_at).to be_present
     end
@@ -80,7 +80,6 @@ describe Synchronize::Mailchimp::Synchronizator do
       expect(subject.client).to receive(:delete).with([])
 
       subject.call
-      expect(subject.result).to be_success
     end
 
     it 'removes obsolete person' do
@@ -90,7 +89,6 @@ describe Synchronize::Mailchimp::Synchronizator do
       expect(subject.client).to receive(:delete).with([user.email])
 
       subject.call
-      expect(subject.result).to be_success
     end
 
     it 'knows about partial result' do
@@ -100,7 +98,7 @@ describe Synchronize::Mailchimp::Synchronizator do
       expect(subject.client).to receive(:delete).with([user.email]).and_return(result(2,1,1))
 
       subject.call
-      expect(subject.result).to be_partial
+      expect(subject.result.state).to eq :partial
     end
 
   end

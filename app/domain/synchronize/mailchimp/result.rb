@@ -6,7 +6,8 @@ module Synchronize
         unchanged: :success,
         success: :success,
         partial: :info,
-        failed: :warning
+        failed: :warning,
+        fatal: :danger
       }.freeze
 
       attr_reader :data
@@ -23,41 +24,50 @@ module Synchronize
         @data[:deleted] = extract(response) if response
       end
 
-      def unchanged?
-        @data.empty?
+      def exception=(exception)
+        @data[:exception] = exception
       end
 
-      def success?
-        @data.values.all? { |val| val.key?(:success) }
-      end
-
-      def partial?
-        @data.values.any? { |val| val.key?(:partial) }
-      end
-
-      def failed?
-        @data.values.all? { |val| val.key?(:errors) }
+      def state
+        if exception?
+          :failed
+        elsif operations.empty?
+          :unchanged
+        elsif operations.all? { |val| val.key?(:failed) }
+          :failed
+        elsif operations.any? { |val| val.key?(:partial) }
+          :partial
+        elsif operations.all? { |val| val.key?(:success) }
+          :success
+        end
       end
 
       def badge_info
-        state = STATE_BADGES.keys.find { |key| send("#{key}?") }
         [state, STATE_BADGES[state]]
       end
 
       private
 
-      def extract(response)
-        total, succeeded, failed = response
-          .slice('total_operations',
-                 'finished_operations',
-                 'errored_operations').values.collect(&:to_i)
+      def exception?
+        @data[:exception].present?
+      end
 
-        if total == succeeded
+      def operations
+        @data.slice(:subscribed, :deleted).values
+      end
+
+      # wird nur aufgerufen, wenn operation ausgeführt wurde
+      def extract(response)
+        total = response['total_operations']
+        failed = response['errored_operations']
+        finished = response['finished_operations']
+
+        if total == failed || finished.zero?
+          { failed: total }
+        elsif finished < total || failed.positive?
+          { partial: [total, failed, finished] }
+        elsif total == finished
           { success: total }
-        elsif succeeded.positive? && failed.positive?
-          { partial: [succeeded, failed] }
-        else
-          { failed: failed }
         end
       end
     end
