@@ -82,6 +82,18 @@ describe Synchronize::Mailchimp::Synchronizator do
       subject.call
     end
 
+    it 'ignores person without email' do
+      allow(subject).to receive(:mailchimp_emails).and_return([])
+      user.update(email: nil)
+      mailing_list.subscriptions.create!(subscriber: user)
+
+      expect(subject.client).to receive(:subscribe).with([])
+      expect(subject.client).to receive(:delete).with([])
+
+      subject.call
+    end
+
+
     it 'removes obsolete person' do
       allow(subject).to receive(:mailchimp_emails).and_return([user.email])
 
@@ -99,7 +111,17 @@ describe Synchronize::Mailchimp::Synchronizator do
 
       subject.call
       expect(subject.result.state).to eq :partial
+      expect(mailing_list.mailchimp_last_synced_at).to be_present
+      expect(mailing_list.mailchimp_result).to be_present
     end
 
+    it 'handles exception during call resets sync flag' do
+      allow(subject).to receive(:mailchimp_emails).and_raise :ouch
+      subject.call
+      expect(mailing_list.mailchimp_result.data[:exception]).to be_present
+      expect(mailing_list.mailchimp_result.state).to eq :failed
+      expect(mailing_list.mailchimp_syncing).to eq false
+      expect(mailing_list.mailchimp_last_synced_at).to be_nil
+    end
   end
 end

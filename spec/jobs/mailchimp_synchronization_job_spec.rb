@@ -14,20 +14,10 @@ describe MailchimpSynchronizationJob do
 
   subject { MailchimpSynchronizationJob.new(mailing_list.id) }
 
-  it 'sets mailing_list state to syncing if jobs eunqueues' do
-    expect do
-      subject.enqueue!
-    end.to change { Delayed::Job.count }.by 1
-
-    mailing_list.reload
-
-    expect(mailing_list.mailchimp_syncing).to be true
-  end
-
   it 'it sets syncing to false after success' do
     time_now = Time.zone.now
     allow_any_instance_of(ActiveSupport::TimeZone).to receive(:now).and_return(time_now)
-    expect_any_instance_of(MailchimpSynchronizationJob).to receive(:perform)
+    allow_any_instance_of(Synchronize::Mailchimp::Client).to receive(:members).and_return([])
 
     subject.enqueue!
 

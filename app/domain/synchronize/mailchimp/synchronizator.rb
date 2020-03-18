@@ -17,12 +17,10 @@ module Synchronize
       end
 
       def call
-        subscribe_missing
-        delete_obsolete
-      rescue => e
-        result.exception = e
-      ensure
-        update_list
+        rescued do
+          subscribe_missing_people
+          archive_obsolete_people
+        end
       end
 
       def missing_people
@@ -41,18 +39,21 @@ module Synchronize
 
       private
 
-      def update_list
-        mailing_list.update(
-          mailchimp_last_synced_at: Time.zone.now,
-          mailchimp_result: result
-        )
+      def rescued
+        mailing_list.update(mailchimp_syncing: true)
+        yield
+        mailing_list.update(mailchimp_last_synced_at: Time.zone.now)
+      rescue => exception
+        result.exception = exception
+      ensure
+        mailing_list.update(mailchimp_syncing: false, mailchimp_result: result)
       end
 
-      def subscribe_missing
+      def subscribe_missing_people
         result.subscribed = client.subscribe(missing_people)
       end
 
-      def delete_obsolete
+      def archive_obsolete_people
         result.deleted = client.delete(obsolete_emails)
       end
 
