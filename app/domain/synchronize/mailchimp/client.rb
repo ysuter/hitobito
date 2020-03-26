@@ -38,7 +38,6 @@ module Synchronize
         end
       end
 
-
       def create_segments(names)
         execute_batch(names) do |name|
           create_segment_operation(name)

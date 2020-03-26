@@ -10,12 +10,9 @@ describe Synchronize::Mailchimp::Client do
   let(:top_leader)   { people(:top_leader) }
   let(:client)       { described_class.new(mailing_list) }
 
-  def stub_members(*members, total_items: nil, offset: 0)
-    entries = members.collect do |email, status|
-      { email_address: email, status: status || 'subscribed' }
-    end
 
-    stub_request(:get, "https://us12.api.mailchimp.com/3.0/lists/2/members?count=#{client.count}&offset=#{offset}").
+  def stub_collection(path, offset, count = client.count, body: )
+    stub_request(:get, "https://us12.api.mailchimp.com/3.0/#{path}?count=#{count}&offset=#{offset}").
       with(
         headers: {
           'Accept'=>'*/*',
@@ -26,11 +23,47 @@ describe Synchronize::Mailchimp::Client do
 
         }
     ).
-    to_return(status: 200, body: { members: entries, total_items: total_items || entries.count }.to_json, headers: {})
+    to_return(status: 200, body: body.to_json, headers: {})
+  end
+
+  def stub_members(*members, total_items: nil, offset: 0)
+    entries = members.collect do |email, status|
+      { email_address: email, status: status || 'subscribed' }
+    end
+    stub_collection("lists/2/members", offset, body: { members: entries, total_items: total_items || entries.count})
+  end
+
+  def stub_segments(*segments, total_items: nil, offset: 0)
+    entries = segments.collect do |name, id|
+      { name: name, id: id.to_i }
+    end
+    stub_collection("lists/2/segments", offset, body: { segments: entries, total_items: total_items || entries.count})
+  end
+
+  context '#segments' do
+    subject { client.fetch_segments }
+
+    it 'returns empty segment list' do
+      stub_segments
+      expect(subject).to be_empty
+    end
+
+    it 'returns segments with id' do
+      stub_segments(%w(a 1), %w(b 2))
+      expect(subject).to have(2).items
+
+      first = subject.first
+      expect(first[:name]).to eq 'a'
+      expect(first[:id]).to eq 1
+
+      second = subject.second
+      expect(second[:name]).to eq 'b'
+      expect(second[:id]).to eq 2
+    end
   end
 
   context '#members' do
-    subject { client.members }
+    subject { client.fetch_members }
 
     it 'returns empty member list' do
       stub_members
@@ -40,6 +73,7 @@ describe Synchronize::Mailchimp::Client do
     it 'returns members with subscription state' do
       stub_members(%w(a@example.com subscribed), %w(b@example.com unsubscribed))
       expect(subject).to have(2).items
+
 
       first = subject.first
       expect(first[:email_address]).to eq 'a@example.com'
@@ -62,6 +96,35 @@ describe Synchronize::Mailchimp::Client do
         users = subject.collect {|e| e[:email_address].split('@').first }
         expect(users).to eq %w(a b c d e)
       end
+    end
+  end
+
+  context '#create_segment_operation' do
+    subject { client.create_segment_operation('a') }
+
+    it 'POSTs to segments list resource' do
+      expect(subject[:method]).to eq 'POST'
+      expect(subject[:path]).to eq 'lists/2/segments'
+    end
+
+    it 'body includes name and static_segment fields' do
+      body = JSON.parse(subject[:body])
+      expect(body['name']).to eq 'a'
+      expect(body['static_segment']).to eq []
+    end
+  end
+
+  context '#update_segment_operation' do
+    subject { client.update_segment_operation(1, %w(leader@example.com member@example.com)) }
+
+    it 'POSTs to segments list resource' do
+      expect(subject[:method]).to eq 'POST'
+      expect(subject[:path]).to eq "lists/2/segments/1"
+    end
+
+    it 'body includes name and static_segment fields' do
+      body = JSON.parse(subject[:body])
+      expect(body['members_to_add']).to eq %w(leader@example.com member@example.com)
     end
   end
 
