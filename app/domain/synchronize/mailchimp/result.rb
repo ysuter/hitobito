@@ -24,6 +24,10 @@ module Synchronize
         @data[:deleted] = extract(response) if response
       end
 
+      def tags=(response)
+        @data[:tags] = extract(response) if response
+      end
+
       def exception=(exception)
         @data[:exception] = exception
       end
@@ -53,7 +57,7 @@ module Synchronize
       end
 
       def operations
-        @data.slice(:subscribed, :deleted).values
+        @data.slice(:subscribed, :deleted, :tags).values
       end
 
       # wird nur aufgerufen, wenn operation ausgeführt wurde
