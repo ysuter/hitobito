@@ -18,8 +18,37 @@ module Synchronize
         @api = Gibbon::Request.new(api_key: mailing_list.mailchimp_api_key, debug: debug)
       end
 
-      def members
-        fetch_members
+      def fetch_members
+        paged do |list, params|
+          body = api.lists(list_id).members.retrieve(params: params).body.to_h
+          body['members'].each do |entry|
+            list << entry.slice('email_address', 'status', 'tags').deep_symbolize_keys
+          end
+          body['total_items']
+        end
+      end
+
+      def fetch_segments
+        paged do |list, params|
+          body = api.lists(list_id).segments.retrieve(params: params).body.to_h
+          body['segments'].each do |entry|
+            list << entry.slice('id', 'name', 'member_count').symbolize_keys
+          end
+          body['total_items']
+        end
+      end
+
+
+      def create_segments(names)
+        execute_batch(names) do |name|
+          create_segment_operation(name)
+        end
+      end
+
+      def update_segments(list)
+        execute_batch(list) do |segment_id, emails|
+          update_segment_operation(segment_id, emails)
+        end
       end
 
       def delete(emails)
@@ -32,6 +61,27 @@ module Synchronize
         execute_batch(people) do |person|
           subscribe_operation(person)
         end
+      end
+
+      def update_tags(email, tags)
+        subscriber_id = Digest::MD5.hexdigest(email.downcase)
+        api.lists(list_id).members(subscriber_id).tags.create(body: { tags: tags })
+      end
+
+      def create_segment_operation(name)
+        {
+          method: 'POST',
+          path: "lists/#{list_id}/segments",
+          body: { name: name, static_segment: [] }.to_json
+        }
+      end
+
+      def update_segment_operation(segment_id, emails)
+        {
+          method: 'POST',
+          path: "lists/#{list_id}/segments/#{segment_id}",
+          body: { members_to_add: emails }.to_json
+        }
       end
 
       def delete_operation(email)
@@ -52,17 +102,11 @@ module Synchronize
 
       private
 
-      def fetch_members(list = [], offset = 0)
-        params = { count: count, offset: offset }
-
-        body = api.lists(list_id).members.retrieve(params: params).body.to_h
-        body['members'].each do |entry|
-          list << entry.slice('email_address', 'status').symbolize_keys
-        end
-
+      def paged(list = [], offset = 0, &block)
+        total_items = block.call(list, count: count, offset: offset)
         next_offset = offset + count
-        if body['total_items'] > next_offset
-          fetch_members(list, next_offset)
+        if total_items > next_offset
+          paged(list, next_offset, &block)
         else
           list
         end
