@@ -26,9 +26,16 @@ describe Synchronize::Mailchimp::Client do
     to_return(status: 200, body: body.to_json, headers: {})
   end
 
+  def stub_merge_fields(*fields, total_items: nil, offset: 0)
+    entries = fields.collect do |tag, name, type|
+      { tag: tag, name: name, type: type }
+    end
+    stub_collection("lists/2/merge-fields", offset, body: { merge_fields: entries, total_items: total_items || entries.count})
+  end
+
   def stub_members(*members, total_items: nil, offset: 0)
-    entries = members.collect do |email, status|
-      { email_address: email, status: status || 'subscribed' }
+    entries = members.collect do |email, status = 'subscribed', tags = [], merge_fields = {}|
+      { email_address: email, status: status, tags: tags, merge_fields: merge_fields }
     end
     stub_collection("lists/2/members", offset, body: { members: entries, total_items: total_items || entries.count})
   end
@@ -38,6 +45,31 @@ describe Synchronize::Mailchimp::Client do
       { name: name, id: id.to_i }
     end
     stub_collection("lists/2/segments", offset, body: { segments: entries, total_items: total_items || entries.count})
+  end
+
+  context '#merge_fields' do
+    subject { client.fetch_merge_fields }
+
+    it 'returns empty merge_fields list' do
+      stub_merge_fields
+      expect(subject).to be_empty
+    end
+
+    it 'returns merge_fields with id' do
+      stub_merge_fields(['FNAME', 'First Name', 'text'],
+                        ['GENDER', 'Gender', 'text'])
+      expect(subject).to have(2).items
+
+      first = subject.first
+      expect(first[:tag]).to eq 'FNAME'
+      expect(first[:name]).to eq 'First Name'
+      expect(first[:type]).to eq 'text'
+
+      second = subject.second
+      expect(second[:tag]).to eq 'GENDER'
+      expect(second[:name]).to eq 'Gender'
+      expect(second[:type]).to eq 'text'
+    end
   end
 
   context '#segments' do
@@ -74,7 +106,6 @@ describe Synchronize::Mailchimp::Client do
       stub_members(%w(a@example.com subscribed), %w(b@example.com unsubscribed))
       expect(subject).to have(2).items
 
-
       first = subject.first
       expect(first[:email_address]).to eq 'a@example.com'
       expect(first[:status]).to eq 'subscribed'
@@ -82,6 +113,16 @@ describe Synchronize::Mailchimp::Client do
       second = subject.second
       expect(second[:email_address]).to eq 'b@example.com'
       expect(second[:status]).to eq 'unsubscribed'
+    end
+
+    it 'returns members with tags' do
+      stub_members(['a@example.com', nil, [{ id: 1, name: 'test:ab' }, { id: 2, name: 'test' }]])
+      expect(subject.first[:tags]).to eq [{ id: 1, name: 'test:ab' }, { id: 2, name: 'test' }]
+    end
+
+    it 'returns members with merge fields' do
+      stub_members(['a@example.com', nil, nil, { FNAME: 'A', LNAME: 'B', GENDER: 'm' }])
+      expect(subject.first[:merge_fields]).to eq({ FNAME: 'A', LNAME: 'B', GENDER: 'm' })
     end
 
     context 'paging' do
@@ -96,6 +137,23 @@ describe Synchronize::Mailchimp::Client do
         users = subject.collect {|e| e[:email_address].split('@').first }
         expect(users).to eq %w(a b c d e)
       end
+    end
+  end
+
+  context '#create_merge_field_operation' do
+    subject { client.create_merge_field_operation('Gender', 'dropdown', { choices: %w(m w) }) }
+
+    it 'POSTs to segments list resource' do
+      expect(subject[:method]).to eq 'POST'
+      expect(subject[:path]).to eq 'lists/2/merge-fields'
+    end
+
+    it 'body includes name and static_segment fields' do
+      body = JSON.parse(subject[:body])
+      expect(body['tag']).to eq 'GENDER'
+      expect(body['name']).to eq 'Gender'
+      expect(body['type']).to eq 'dropdown'
+      expect(body['options']['choices']).to eq %w(m w)
     end
   end
 

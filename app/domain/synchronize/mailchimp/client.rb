@@ -18,11 +18,21 @@ module Synchronize
         @api = Gibbon::Request.new(api_key: mailing_list.mailchimp_api_key, debug: debug)
       end
 
+      def fetch_merge_fields
+        paged do |list, params|
+          body = api.lists(list_id).merge_fields.retrieve(params: params).body.to_h
+          body['merge_fields'].each do |entry|
+            list << entry.slice('tag', 'name', 'type').deep_symbolize_keys
+          end
+          body['total_items']
+        end
+      end
+
       def fetch_members
         paged do |list, params|
           body = api.lists(list_id).members.retrieve(params: params).body.to_h
           body['members'].each do |entry|
-            list << entry.slice('email_address', 'status', 'tags').deep_symbolize_keys
+            list << entry.slice('email_address', 'status', 'tags', 'merge_fields').deep_symbolize_keys
           end
           body['total_items']
         end
@@ -44,6 +54,12 @@ module Synchronize
         end
       end
 
+      def create_merge_fields(list)
+        execute_batch(list) do |name, type, options|
+          create_merge_field_operation(name, type, options)
+        end
+      end
+
       def update_segments(list)
         execute_batch(list) do |segment_id, emails|
           update_segment_operation(segment_id, emails)
@@ -62,9 +78,16 @@ module Synchronize
         end
       end
 
-      def update_tags(email, tags)
-        subscriber_id = Digest::MD5.hexdigest(email.downcase)
-        api.lists(list_id).members(subscriber_id).tags.create(body: { tags: tags })
+      # def fetch_batch(batch_id)
+      #   api.batches(batch_id).retrieve.body.fetch('response_body_url')
+      # end
+
+      def create_merge_field_operation(name, type, options = {})
+        {
+          method: 'POST',
+          path: "lists/#{list_id}/merge-fields",
+          body: { tag: name.upcase, name: name, type: type, options: options }.to_json
+        }
       end
 
       def create_segment_operation(name)
@@ -95,7 +118,7 @@ module Synchronize
         {
           method: 'POST',
           path: "lists/#{list_id}/members",
-          body: subscriber_body(person).to_json
+          body: subscriber_body(person).merge(status: :subscribed).to_json
         }
       end
 
@@ -136,7 +159,8 @@ module Synchronize
         if status != 'finished'
           wait_for_finish(batch_id, count + 1)
         else
-          body.slice( 'total_operations', 'finished_operations', 'errored_operations').tap do |result|
+          attrs = %w(total_operations finished_operations errored_operations response_body_url)
+          body.slice(*attrs).tap do |result|
             logger.info result
           end
         end
@@ -149,10 +173,10 @@ module Synchronize
       def subscriber_body(person)
         {
           email_address: person.email,
-          status: 'subscribed',
           merge_fields: {
             FNAME: person.first_name,
-            LNAME: person.last_name
+            LNAME: person.last_name,
+            GENDER: person.gender
           }
         }
       end
