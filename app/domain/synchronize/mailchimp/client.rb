@@ -77,6 +77,12 @@ module Synchronize
         end
       end
 
+      def update_members(people)
+        execute_batch(people) do |person|
+          update_member_operation(person)
+        end
+      end
+
       def subscribe(people)
         execute_batch(people) do |person|
           subscribe_member_operation(person)
@@ -112,10 +118,9 @@ module Synchronize
       end
 
       def unsubscribe_member_operation(email)
-        subscriber_id = Digest::MD5.hexdigest(email.downcase)
         {
           method: 'DELETE',
-          path: "lists/#{list_id}/members/#{subscriber_id}"
+          path: "lists/#{list_id}/members/#{subscriber_id(email)}"
         }
       end
 
@@ -127,7 +132,30 @@ module Synchronize
         }
       end
 
+      def update_member_operation(person)
+        {
+          method: 'PUT',
+          path: "lists/#{list_id}/members/#{subscriber_id(person.email)}",
+          body: subscriber_body(person).to_json
+        }
+      end
+
+      def subscriber_body(person)
+        {
+          email_address: person.email,
+          merge_fields: {
+            FNAME: person.first_name,
+            LNAME: person.last_name,
+            GENDER: person.gender
+          }.merge(merge_field_values(person))
+        }.merge(member_field_values(person))
+      end
+
       private
+
+      def subscriber_id(email)
+        Digest::MD5.hexdigest(email.downcase)
+      end
 
       def paged(list = [], offset = 0, &block)
         total_items = block.call(list, count: count, offset: offset)
@@ -171,21 +199,6 @@ module Synchronize
         end
       end
 
-      def logger
-        Rails.logger
-      end
-
-      def subscriber_body(person)
-        {
-          email_address: person.email,
-          merge_fields: {
-            FNAME: person.first_name,
-            LNAME: person.last_name,
-            GENDER: person.gender
-          }.merge(merge_field_values(person))
-        }.merge(member_field_values(person))
-      end
-
       def merge_field_values(person)
         merge_fields.collect do |field, type, options, evaluator|
           [field.upcase, evaluator.call(person)]
@@ -196,6 +209,10 @@ module Synchronize
         member_fields.collect do |field, evaluator|
           [field,  evaluator.call(person)]
         end.to_h.deep_symbolize_keys
+      end
+
+      def logger
+        Rails.logger
       end
     end
   end

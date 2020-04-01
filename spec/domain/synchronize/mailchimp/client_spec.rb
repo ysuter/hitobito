@@ -224,6 +224,37 @@ describe Synchronize::Mailchimp::Client do
     end
   end
 
+  context '#update_member_operation' do
+    subject { client.update_member_operation(top_leader) }
+
+    it 'POSTs to members list resource' do
+      expect(subject[:method]).to eq 'PUT'
+      expect(subject[:path]).to eq 'lists/2/members/f55f27b511af2735650c330490da54f5'
+    end
+
+    it 'body includes status, email_address, FNAME and LNAME fields' do
+      body = JSON.parse(subject[:body])
+      expect(body['email_address']).to eq 'top_leader@example.com'
+      expect(body['merge_fields']['FNAME']).to eq 'Top'
+      expect(body['merge_fields']['LNAME']).to eq 'Leader'
+    end
+
+    it 'body includes member fields' do
+      member_field = ['id', ->(p) { p.id }]
+      expect(client).to receive(:member_fields).and_return([member_field])
+      body = JSON.parse(subject[:body])
+      expect(body['id']).to eq top_leader.id
+    end
+
+    it 'body includes merge fields' do
+      merge_field = ['Gender', 'dropdown', { choices: %w(w m) }, ->(p) { p.gender }]
+      expect(client).to receive(:merge_fields).and_return([merge_field])
+      body = JSON.parse(subject[:body])
+      expect(body['merge_fields']['GENDER']).to eq top_leader.gender
+    end
+  end
+
+
   context '#unsubscribe_member_operation' do
     subject { client.unsubscribe_member_operation(@email) }
 
