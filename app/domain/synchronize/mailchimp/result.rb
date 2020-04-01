@@ -28,8 +28,17 @@ module Synchronize
         @data[:tags] = extract(response) if response
       end
 
+      def merge_fields=(response)
+        @data[:merge_fields] = extract(response) if response
+      end
+
+      def updates=(response)
+        @data[:updates] = extract(response) if response
+      end
+
+
       def exception=(exception)
-        @data[:exception] = exception
+        @data[:exception] = [exception.class, exception.message].join(' - ')
       end
 
       def state
@@ -57,7 +66,7 @@ module Synchronize
       end
 
       def operations
-        @data.slice(:subscribed, :deleted, :tags).values
+        @data.slice(:subscribed, :deleted, :tags, :merge_fields).values
       end
 
       # wird nur aufgerufen, wenn operation ausgeführt wurde
@@ -65,11 +74,12 @@ module Synchronize
         total = response['total_operations']
         failed = response['errored_operations']
         finished = response['finished_operations']
+        response_body_url = response['response_body_url']
 
         if total == failed || finished.zero?
-          { failed: total }
+          { failed: [total, response_body_url] }
         elsif finished < total || failed.positive?
-          { partial: [total, failed, finished] }
+          { partial: [total, failed, finished, response_body_url] }
         elsif total == finished
           { success: total }
         end

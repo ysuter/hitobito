@@ -8,22 +8,37 @@ require 'digest/md5'
 module Synchronize
   module Mailchimp
     class Synchronizator
-
       attr_reader :mailing_list, :result
 
-      def initialize(mailing_list)
+      class_attribute :merge_fields, :member_fields
+      self.member_fields = []
+
+      self.merge_fields = [
+        [ 'Gender', 'dropdown', { choices: %w(m w) },  ->(p) { person.gender } ]
+      ]
+
+
+      # TOOD move to gpl wagon
+      self.member_fields = [
+        [ language: ->(p) { person.preferred_language }  ]
+      ]
+
+      def initialize(mailing_list, rescued: true)
         @mailing_list = mailing_list
         @result = Result.new
+        @rescued = rescued
       end
 
       def call
         rescued do
-          # subscribe_missing_people
-          # archive_obsolete_people
-
-
+          create_missing_merge_fields
           create_missing_tags
+
+          subscribe_missing_people
+          archive_obsolete_people
+
           update_people_tags
+          update_changed_people
         end
       end
 
@@ -38,7 +53,7 @@ module Synchronize
       end
 
       def client
-        @client ||= Client.new(mailing_list)
+        @client ||= Client.new(mailing_list, member_fields: member_fields, merge_fields: merge_fields)
       end
 
       private
@@ -49,6 +64,7 @@ module Synchronize
         mailing_list.update(mailchimp_last_synced_at: Time.zone.now)
       rescue => exception
         result.exception = exception
+        raise exception unless rescued?
       ensure
         mailing_list.update(mailchimp_syncing: false, mailchimp_result: result)
       end
@@ -65,19 +81,31 @@ module Synchronize
         result.tags = client.update_segments(tag_changes)
       end
 
+      def update_changed_people
+        result.updates = client.update_members(changed_people) if changed_people.present?
+      end
+
+      def create_missing_merge_fields
+        tags = client.fetch_merge_fields.collect { |field| field[:tag] }
+        missing = merge_fields.reject { |name, _, _| tags.include?(name.upcase) }
+        result.merge_fields = client.create_merge_fields(missing)
+      end
+
       def create_missing_tags
-        missing  = local_tags.keys - client.fetch_segments.collect { |s| s[:name] }
+        missing = local_tags.keys - client.fetch_segments.collect { |s| s[:name] }
         client.create_segments(missing)
+      end
+
+      def changed_people
+        @changed_people ||= people.select do |person|
+          member = members_by_email[person.email]
+          member.deep_merge(client.subscriber_body(person)) != member if member
+        end
       end
 
       def local_tags
         @local_tags ||= people.each_with_object({}) do |person, hash|
           next unless person.email
-
-          if person.gender.present?
-            hash[person.gender_label] ||= []
-            hash[person.gender_label] << person.email
-          end
 
           person.tags.each do |tag|
             value = tag.name
@@ -87,23 +115,23 @@ module Synchronize
         end
       end
 
+      def remote_tags
+        @remote_tags ||= members.each_with_object({}) do |member, hash|
+          member[:tags].each do |tag|
+            hash[tag[:name]] ||= []
+            hash[tag[:name]] << member[:email_address]
+          end
+        end
+      end
+
       def tag_changes
-        segments = client.fetch_segments.index_by { |s| s[:name] }
-        members  = client.fetch_members
+        segments = client.fetch_segments.index_by { |t| t[:name] }
 
         local_tags.collect do |tag, emails|
-          next if emails.sort == tagged_emails(members, tag).sort
+          next if emails.sort == remote_tags.fetch(tag, []).sort
 
           [segments.dig(tag, :id), emails]
         end.compact
-      end
-
-      def tagged_emails(members, tag)
-        members.select { |m| m[:tags].include?(tag) }.collect { |m| m[:email] }
-      end
-
-      def build_tag_diff(person, remote_tags)
-        missing + obsolete
       end
 
       def people
@@ -116,7 +144,15 @@ module Synchronize
       end
 
       def members
-        @members ||= client.members
+        @members ||= client.fetch_members
+      end
+
+      def members_by_email
+        @members_by_email ||= members.index_by { |m| m[:email_address] }
+      end
+
+      def rescued?
+        @rescued
       end
 
     end
