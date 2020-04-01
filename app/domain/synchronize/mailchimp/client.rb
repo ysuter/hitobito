@@ -192,7 +192,7 @@ module Synchronize
           wait_for_finish(batch_id, count + 1)
         else
           attrs = %w(total_operations finished_operations errored_operations response_body_url)
-          body.slice(*attrs).tap do |result|
+          body.slice(*attrs).tap do |updates|
             logger.info updates
           end
         end
