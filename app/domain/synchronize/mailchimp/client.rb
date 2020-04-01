@@ -89,9 +89,9 @@ module Synchronize
         end
       end
 
-      # def fetch_batch(batch_id)
-      #   api.batches(batch_id).retrieve.body.fetch('response_body_url')
-      # end
+      def fetch_batch(batch_id)
+        api.batches(batch_id).retrieve.body.fetch('response_body_url')
+      end
 
       def create_merge_field_operation(name, type, options = {})
         {
@@ -146,7 +146,6 @@ module Synchronize
           merge_fields: {
             FNAME: person.first_name,
             LNAME: person.last_name,
-            GENDER: person.gender
           }.merge(merge_field_values(person))
         }.merge(member_field_values(person))
       end
@@ -194,7 +193,7 @@ module Synchronize
         else
           attrs = %w(total_operations finished_operations errored_operations response_body_url)
           body.slice(*attrs).tap do |result|
-            logger.info result
+            logger.info updates
           end
         end
       end

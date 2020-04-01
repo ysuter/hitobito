@@ -116,6 +116,10 @@ class MailingList < ActiveRecord::Base
     Synchronize::Mailchimp::Synchronizator.new(self).call
   end
 
+  def mailchimp_client
+    Synchronize::Mailchimp::Client.new(self)
+  end
+
   private
 
   def people_joins
