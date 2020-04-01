@@ -77,6 +77,12 @@ module Synchronize
         end
       end
 
+      def delete_segments(segment_ids)
+        execute_batch(segment_ids) do |segment_id|
+          destroy_segment_operation(segment_id)
+        end
+      end
+
       def update_members(people)
         execute_batch(people) do |person|
           update_member_operation(person)
@@ -106,6 +112,13 @@ module Synchronize
           method: 'POST',
           path: "lists/#{list_id}/segments",
           body: { name: name, static_segment: [] }.to_json
+        }
+      end
+
+      def destroy_segment_operation(segment_id)
+        {
+          method: 'DELETE',
+          path: "lists/#{list_id}/segments/#{segment_id}",
         }
       end
 

@@ -215,7 +215,7 @@ describe Synchronize::Mailchimp::Synchronizator do
         mailing_list.subscriptions.create!(subscriber: user)
 
         allow(client).to receive(:fetch_members).and_return([member(user)])
-        expect(client).to receive(:fetch_segments).twice.and_return(remote_tags)
+        expect(client).to receive(:fetch_segments).thrice.and_return(remote_tags)
         expect(client).to receive(:update_segments).with([[0, %w(top_leader@example.com)],
                                                           [1, %w(top_leader@example.com)]])
         subject.call
@@ -225,7 +225,7 @@ describe Synchronize::Mailchimp::Synchronizator do
         tags.each { |tag| user.tags.create!(name: tag) }
         mailing_list.subscriptions.create!(subscriber: user)
         allow(client).to receive(:fetch_members).and_return([member(user, remote_tags.take(1))])
-        expect(client).to receive(:fetch_segments).twice.and_return(remote_tags)
+        expect(client).to receive(:fetch_segments).thrice.and_return(remote_tags)
         expect(client).to receive(:update_segments).with([[1, %w(top_leader@example.com)]])
         subject.call
       end
@@ -234,8 +234,18 @@ describe Synchronize::Mailchimp::Synchronizator do
         tags.each { |tag| user.tags.create!(name: tag) }
         mailing_list.subscriptions.create!(subscriber: user)
         allow(client).to receive(:fetch_members).and_return([member(user, remote_tags)])
-        expect(client).to receive(:fetch_segments).twice.and_return(remote_tags)
+        expect(client).to receive(:fetch_segments).thrice.and_return(remote_tags)
         expect(client).to receive(:update_segments).with([])
+        subject.call
+      end
+
+      it 'deletes obsolete segments' do
+        mailing_list.subscriptions.create!(subscriber: user)
+        user.tags.create!(name: tags.first)
+        allow(client).to receive(:fetch_members).and_return([member(user, remote_tags.take(1))])
+        expect(client).to receive(:fetch_segments).thrice.and_return(remote_tags)
+        expect(client).to receive(:update_segments).with([])
+        expect(client).to receive(:delete_segments).with([1])
         subject.call
       end
     end

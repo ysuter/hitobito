@@ -14,13 +14,7 @@ module Synchronize
       self.member_fields = []
 
       self.merge_fields = [
-        [ 'Gender', 'dropdown', { choices: %w(m w) },  ->(p) { person.gender } ]
-      ]
-
-
-      # TOOD move to gpl wagon
-      self.member_fields = [
-        [ language: ->(p) { person.preferred_language }  ]
+        [ 'Gender', 'dropdown', { choices: %w(m w) },  ->(p) { p.gender } ]
       ]
 
       def initialize(mailing_list, rescued: true)
@@ -39,6 +33,8 @@ module Synchronize
 
           update_people_tags
           update_changed_people
+
+          delete_obsolete_segments
         end
       end
 
@@ -50,6 +46,24 @@ module Synchronize
 
       def obsolete_emails
         mailchimp_emails - people.collect(&:email)
+      end
+
+      # TODO does not work for locally removed tags
+      def changed_tags
+        segments = client.fetch_segments.index_by { |t| t[:name] }
+
+        local_tags.collect do |tag, emails|
+          next if emails.sort == remote_tags.fetch(tag, []).sort
+
+          [segments.dig(tag, :id), emails]
+        end.compact
+      end
+
+      def changed_people
+        @changed_people ||= people.select do |person|
+          member = members_by_email[person.email]
+          member.deep_merge(client.subscriber_body(person)) != member if member
+        end
       end
 
       def client
@@ -77,8 +91,12 @@ module Synchronize
         result.deleted = client.delete(obsolete_emails)
       end
 
+      def delete_obsolete_segments
+        result.segments = client.delete_segments(obsolete_segments)
+      end
+
       def update_people_tags
-        result.tags = client.update_segments(tag_changes)
+        result.tags = client.update_segments(changed_tags)
       end
 
       def update_changed_people
@@ -96,11 +114,11 @@ module Synchronize
         client.create_segments(missing)
       end
 
-      def changed_people
-        @changed_people ||= people.select do |person|
-          member = members_by_email[person.email]
-          member.deep_merge(client.subscriber_body(person)) != member if member
-        end
+      def delete_obsolete_segments
+        missing = client.fetch_segments.reject do |s|
+          local_tags.keys.include?(s[:name])
+        end.collect { |s| s[:id] }
+        client.delete_segments(missing)
       end
 
       def local_tags
@@ -122,16 +140,6 @@ module Synchronize
             hash[tag[:name]] << member[:email_address]
           end
         end
-      end
-
-      def tag_changes
-        segments = client.fetch_segments.index_by { |t| t[:name] }
-
-        local_tags.collect do |tag, emails|
-          next if emails.sort == remote_tags.fetch(tag, []).sort
-
-          [segments.dig(tag, :id), emails]
-        end.compact
       end
 
       def people
