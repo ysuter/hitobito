@@ -32,7 +32,7 @@ module Synchronize
 
       def fetch_members
         fields = %w(email_address status tags merge_fields)
-        fields += member_fields.collect(&:first)
+        fields += member_fields.collect(&:first).collect(&:to_s)
 
         paged do |list, params|
           body = api.lists(list_id).members.retrieve(params: params).body.to_h
