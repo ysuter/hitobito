@@ -9,11 +9,13 @@ require 'digest/md5'
 module Synchronize
   module Mailchimp
     class Client
-      attr_reader :list_id, :count, :api
+      attr_reader :list_id, :count, :api, :merge_fields, :member_fields
 
-      def initialize(mailing_list, count = 50, debug = false)
+      def initialize(mailing_list, member_fields: [], merge_fields: [], count: 50, debug: false)
         @list_id = mailing_list.mailchimp_list_id
         @count   = count
+        @merge_fields = merge_fields
+        @member_fields = member_fields
 
         @api = Gibbon::Request.new(api_key: mailing_list.mailchimp_api_key, debug: debug)
       end
@@ -29,10 +31,13 @@ module Synchronize
       end
 
       def fetch_members
+        fields = %w(email_address status tags merge_fields)
+        fields += member_fields.collect(&:first)
+
         paged do |list, params|
           body = api.lists(list_id).members.retrieve(params: params).body.to_h
           body['members'].each do |entry|
-            list << entry.slice('email_address', 'status', 'tags', 'merge_fields').deep_symbolize_keys
+            list << entry.slice(*fields).deep_symbolize_keys
           end
           body['total_items']
         end
@@ -68,13 +73,13 @@ module Synchronize
 
       def delete(emails)
         execute_batch(emails) do |email|
-          delete_operation(email)
+          unsubscribe_member_operation(email)
         end
       end
 
       def subscribe(people)
         execute_batch(people) do |person|
-          subscribe_operation(person)
+          subscribe_member_operation(person)
         end
       end
 
@@ -106,7 +111,7 @@ module Synchronize
         }
       end
 
-      def delete_operation(email)
+      def unsubscribe_member_operation(email)
         subscriber_id = Digest::MD5.hexdigest(email.downcase)
         {
           method: 'DELETE',
@@ -114,7 +119,7 @@ module Synchronize
         }
       end
 
-      def subscribe_operation(person)
+      def subscribe_member_operation(person)
         {
           method: 'POST',
           path: "lists/#{list_id}/members",
@@ -177,8 +182,20 @@ module Synchronize
             FNAME: person.first_name,
             LNAME: person.last_name,
             GENDER: person.gender
-          }
-        }
+          }.merge(merge_field_values(person))
+        }.merge(member_field_values(person))
+      end
+
+      def merge_field_values(person)
+        merge_fields.collect do |field, type, options, evaluator|
+          [field.upcase, evaluator.call(person)]
+        end.to_h.deep_symbolize_keys
+      end
+
+      def member_field_values(person)
+        member_fields.collect do |field, evaluator|
+          [field,  evaluator.call(person)]
+        end.to_h.deep_symbolize_keys
       end
     end
   end

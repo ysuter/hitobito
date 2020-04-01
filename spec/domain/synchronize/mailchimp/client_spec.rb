@@ -34,8 +34,8 @@ describe Synchronize::Mailchimp::Client do
   end
 
   def stub_members(*members, total_items: nil, offset: 0)
-    entries = members.collect do |email, status = 'subscribed', tags = [], merge_fields = {}|
-      { email_address: email, status: status, tags: tags, merge_fields: merge_fields }
+    entries = members.collect do |email, status = 'subscribed', tags = [], merge_fields = {}, extra_fields = {}|
+      { email_address: email, status: status, tags: tags, merge_fields: merge_fields }.merge(extra_fields)
     end
     stub_collection("lists/2/members", offset, body: { members: entries, total_items: total_items || entries.count})
   end
@@ -125,8 +125,15 @@ describe Synchronize::Mailchimp::Client do
       expect(subject.first[:merge_fields]).to eq({ FNAME: 'A', LNAME: 'B', GENDER: 'm' })
     end
 
+    it 'returns members with custom member fields' do
+      expect(client).to receive(:member_fields).and_return([['company']])
+      stub_members(['a@example.com', nil, nil, {}, { company: :acme }])
+      expect(subject.first[:company]).to eq 'acme'
+    end
+
+
     context 'paging' do
-      let(:client)       { described_class.new(mailing_list, 2) }
+      let(:client)       { described_class.new(mailing_list, count: 2) }
 
       it 'fetches until total has been reached' do
         stub_members(%w(a@example.com), %w(b@example.com), total_items: 5)
@@ -186,14 +193,13 @@ describe Synchronize::Mailchimp::Client do
     end
   end
 
-  context '#subscribe_operation' do
-    subject { client.subscribe_operation(top_leader) }
+  context '#subscribe_member_operation' do
+    subject { client.subscribe_member_operation(top_leader) }
 
     it 'POSTs to members list resource' do
       expect(subject[:method]).to eq 'POST'
       expect(subject[:path]).to eq 'lists/2/members'
     end
-
 
     it 'body includes status, email_address, FNAME and LNAME fields' do
       body = JSON.parse(subject[:body])
@@ -202,10 +208,24 @@ describe Synchronize::Mailchimp::Client do
       expect(body['merge_fields']['FNAME']).to eq 'Top'
       expect(body['merge_fields']['LNAME']).to eq 'Leader'
     end
+
+    it 'body includes member fields' do
+      member_field = ['id', ->(p) { p.id }]
+      expect(client).to receive(:member_fields).and_return([member_field])
+      body = JSON.parse(subject[:body])
+      expect(body['id']).to eq top_leader.id
+    end
+
+    it 'body includes merge fields' do
+      merge_field = ['Gender', 'dropdown', { choices: %w(w m) }, ->(p) { p.gender }]
+      expect(client).to receive(:merge_fields).and_return([merge_field])
+      body = JSON.parse(subject[:body])
+      expect(body['merge_fields']['GENDER']).to eq top_leader.gender
+    end
   end
 
-  context '#delete_operation' do
-    subject { client.delete_operation(@email) }
+  context '#unsubscribe_member_operation' do
+    subject { client.unsubscribe_member_operation(@email) }
 
     it 'DELETEs email specific resource' do
       @email = 'top_leader@example.com'
