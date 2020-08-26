@@ -18,5 +18,10 @@ before_install:
   - mysql -e 'CREATE DATABASE hitobito_test;'
 install:
   - bundle install --path vendor/bundle
+before_script:
+    - echo `google-chrome-stable --version`
 script:
   - bundle exec rake db:create ci --trace
+
+addons:
+  chrome: stable
