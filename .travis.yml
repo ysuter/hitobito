@@ -22,6 +22,16 @@ before_script:
     - echo `google-chrome-stable --version`
 script:
   - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+  - bundle exec rake db:create ci --trace
+
 
 addons:
   chrome: stable
