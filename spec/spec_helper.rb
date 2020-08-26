@@ -11,10 +11,10 @@ require File.expand_path('../../config/environment', __FILE__)
 require 'rspec/rails'
 require 'cancan/matchers'
 require 'paper_trail/frameworks/rspec'
-require 'webmock/rspec'
+# require 'webmock/rspec'
 
 # Needed for feature specs
-WebMock.disable_net_connect!(allow_localhost: true, allow: %w(chromedriver.storage.googleapis.com))
+# WebMock.disable_net_connect!(allow_localhost: true, allow: %w(chromedriver.storage.googleapis.com))
 
 
 ActiveRecord::Migration.maintain_test_schema!
@@ -148,12 +148,15 @@ unless RSpec.configuration.exclusion_filter[:type] == 'feature'
     options.args << '--disable-gpu' # required for windows
     options.args << '--no-sandbox' # required for docker
     options.args << '--disable-dev-shm-usage' # helps with docker resource limitations
+    options.args << '--window-size=1800,1000'
     options.args << '--crash-dumps-dir=/tmp'
+
     Capybara::Selenium::Driver.new(app, browser: :chrome, options: options)
   end
 
   Capybara.current_driver = :chrome
   Capybara.javascript_driver = :chrome
 
+  Webdrivers.logger.level = :DEBUG
   puts "Using chromedriver version #{Webdrivers::Chromedriver.current_version}"
 end
