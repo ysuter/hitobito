@@ -148,7 +148,6 @@ unless RSpec.configuration.exclusion_filter[:type] == 'feature'
     options.args << '--disable-gpu' # required for windows
     options.args << '--no-sandbox' # required for docker
     options.args << '--disable-dev-shm-usage' # helps with docker resource limitations
-    options.args << '--window-size=1800,1000'
     options.args << '--crash-dumps-dir=/tmp'
     Capybara::Selenium::Driver.new(app, browser: :chrome, options: options)
   end
