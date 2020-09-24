@@ -15,7 +15,33 @@ module TagListsHelper
     end, '')
   end
 
+  def format_tag_category(category)
+    case category
+    when :other
+      t('.category_other')
+    when :t_email
+      t('.email')
+    else
+      category
+    end
+  end
+
+  def format_tag_value(tag, category)
+    ttv = translatable_tag_values
+    category = category.to_sym
+    tag = tag.name_without_category
+    if ttv[category]&.include?(tag)
+      t(".#{category}.#{tag}")
+    else
+      tag
+    end
+  end
+
   private
+
+  def translatable_tag_values
+    { t_email: %w(primary-invalid additional-invalid) }
+  end
 
   def tag_checkbox(tag, count)
     label_tag(nil, class: 'checkbox ') do
